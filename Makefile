@@ -12,7 +12,6 @@ P_BLUE		:=	\033[38;2;179;235;242m
 CYAN		:=	\033[36m
 P_YELLOW	:=	\033[38;2;255;234;150m
 GREEN		:=	\033[32m
-G_NEON		:=	\033[38;2;57;255;20m
 P_GREEN		:=	\033[38;2;173;235;179m
 PURPLE		:=	\033[35m
 P_PURPLE	:=	\033[38;2;211;211;255m
@@ -31,8 +30,10 @@ LDFLAGS		:=	-lm
 DEBUG		:=	-g3
 
 define display_ascii_art
-	@printf "%b\n" "$(1) ____  ____       ____  __  __ _   ___ \n(  __)(_  _)     (  _ \(  )(  ( \ / __)\n ) _)   )(  ____  ) __/ )( /    /( (_ \\\n(__)   (__)(____)(__)  (__)\_)__) \___/\n"
+	@printf "%b\n" "$(1) ____  ____       ____  __  __ _   ___ \n(  __)(_  _)     (  _ \(  )(  ( \ / __)\n ) _)   )(  ____  ) __/ )( /    /( (_ \\n(__)   (__)(____)(__)  (__)\_)__) \___/\n"
 endef
+
+COMPILE		=	cc $(CFLAGS) $(DEPFLAGS) $(INC) -c $< -o $@
 
 #————————————————————————————————————————————————————————
 #	SOURCES
@@ -46,36 +47,37 @@ OBJS		:=	$(patsubst $(SRCS_DIR)%.c,$(OBJS_DIR)%.o,$(SRCS))
 DEPS		:=	$(OBJS:.o=.d)
 
 #————————————————————————————————————————————————————————
-#	PROGRESS BAR
+#	COMPILATION PROGRESS
 #————————————————————————————————————————————————————————
 
-TOTAL_FILES		:=	$(words $(SRCS))
 PROGRESS_FILE	:=	.progress_count
+TOTAL_FILES		:=	$(words $(SRCS))
 
-BAR_WIDTH		:=	55
-BAR_FILL		:=	█
-BAR_EMPTY		:=	░
+BAR_WIDTH		:=	10
+BAR_FILL		:=	=
+BAR_EMPTY		:=	.
 
-define show_progress
-	@bash -c '\
-	CURRENT=$$(cat $(PROGRESS_FILE) 2>/dev/null || echo 0); \
-	CURRENT=$$((CURRENT + 1)); \
-	echo $$CURRENT > $(PROGRESS_FILE); \
-	TOTAL=$(TOTAL_FILES); \
-	TERM_WIDTH=$$(tput cols 2>/dev/null || echo 80); \
-	if [ $$TOTAL -gt 0 ]; then \
-		PERCENT=$$((CURRENT * 100 / TOTAL)); \
-		FILLED=$$((CURRENT * $(BAR_WIDTH) / TOTAL)); \
-		EMPTY=$$(($(BAR_WIDTH) - FILLED)); \
-		printf "\r\033[K$(BOLD)$(WHITE)["; \
-		for i in $$(seq 1 $$FILLED); do printf "$(P_GREEN)$(BAR_FILL)"; done; \
-		for i in $$(seq 1 $$EMPTY); do printf "$(WHITE)$(BAR_EMPTY)"; done; \
-		printf "$(WHITE)] $(P_GREEN)%3d%%\t$(P_PURPLE)(%d/%d)$(NC) " $$PERCENT $$CURRENT $$TOTAL; \
-		if [ $$TERM_WIDTH -ge 100 ]; then \
-			printf "$(P_PURPLE)$(1)$(NC)"; \
-		fi; \
-		if [ $$CURRENT -eq $$TOTAL ]; then printf "\n"; fi; \
-	fi'
+define step
+	@printf "x\n" >> $(PROGRESS_FILE); \
+	C=`wc -l < $(PROGRESS_FILE)`; \
+	T=$(TOTAL_FILES); \
+	if [ $$T -lt $$C ]; then T=$$C; fi; \
+	P=`expr $$C \* 100 / $$T`; \
+	F=`expr $$C \* $(BAR_WIDTH) / $$T`; \
+	B=""; V=""; I=0; \
+	while [ $$I -lt $$F ]; do B="$$B$(BAR_FILL)"; I=`expr $$I + 1`; done; \
+	while [ $$I -lt $(BAR_WIDTH) ]; do V="$$V$(BAR_EMPTY)"; I=`expr $$I + 1`; done; \
+	printf "$(WHITE)[$(P_GREEN)%s$(WHITE)%s]$(NC) $(P_GREEN)%3d%%$(NC) $(P_PURPLE)(%d/%d)$(NC) %s\n" \
+		"$$B" "$$V" "$$P" "$$C" "$$T" "$(1)"
+endef
+
+define recap
+	@C=`cat $(PROGRESS_FILE) 2>/dev/null | wc -l`; \
+	if [ $$C -gt 0 ]; then \
+		printf "\n$(BOLD)$(P_PURPLE)Files compiled %d/%d$(NC)\n" "$$C" "$(TOTAL_FILES)"; \
+	fi
+	@$(RM_PROGRESS)
+	@printf "$(BOLD)$(PINK)Linking $(NAME)...$(NC)\n\n"
 endef
 
 #————————————————————————————————————————————————————————
@@ -85,46 +87,33 @@ endef
 all: $(NAME)
 
 $(OBJS_DIR)%.o: $(SRCS_DIR)%.c
-		@if [ ! -f $(PROGRESS_FILE) ]; then \
-			echo "0" > $(PROGRESS_FILE); \
-			printf "$(BOLD)╔══════════════════════════════════════════════════════╗$(NC)\n"; \
-			printf "$(BOLD)║$(NC)\t\t  $(BOLD)$(PINK)Compiling $(NAME)...$(NC)                 $(BOLD)║$(NC)\n"; \
-			printf "$(BOLD)╚══════════════════════════════════════════════════════╝$(NC)\n\n"; \
-		fi
 		@mkdir -p $(dir $@)
-		@cc $(CFLAGS) $(DEPFLAGS) $(INC) -c $< -o $@
-		@$(call show_progress,$<)
+		$(call step,$(COMPILE))
+		@$(COMPILE)
 
 -include $(DEPS)
 
 $(NAME): $(OBJS)
+		$(call recap)
 		@cc $(CFLAGS) $(INC) $(OBJS) -o $(NAME) $(LDFLAGS)
-		@rm -f $(PROGRESS_FILE)
-		@printf "\033[5A\033[J"
-		@sleep 1
-		@echo "\n$(BOLD)======================================================\n"
-		@$(call display_ascii_art,$(P_GREEN))
-		@echo "\n$(NC)$(BOLD)"
-		@echo "=====================$(BLINK)$(G_NEON)   READY!   $(NC)$(BOLD)=====================\n\n"
-
-setcap:	$(NAME)
-		sudo setcap cap_net_raw+ep $(NAME)
+		@printf "$(BOLD)========================================\n"
+		$(call display_ascii_art,$(P_PURPLE))
+		@printf "$(BOLD)==============$(BLINK)$(PINK)   READY!   $(NC)$(BOLD)==============$(NC)\n\n"
 
 clean:
 		rm -rf $(OBJS_DIR)
 		@rm -f $(PROGRESS_FILE)
-		@echo "$(BOLD)$(BLUE)[clean]:\t$(NC)Objects successfully removed!\n"
+		@printf "$(BOLD)$(BLUE)[clean]:$(NC) Objects successfully removed!\n"
 
 fclean:	clean
 		rm -rf $(NAME)
-		@echo "$(BOLD)$(CYAN)[fclean]:\t$(NC)Executable successfully removed!\n"
+		@printf "$(BOLD)$(CYAN)[fclean]:$(NC) Executable successfully removed!\n\n"
 
 re:	fclean
-		@make --no-print-directory all
-		@echo "$(BOLD)$(P_YELLOW)[ft_ping] $(NC)Project successfully rebuilt! ✨\n"
+		@$(MAKE) --no-print-directory all
+		@printf "$(BOLD)$(P_YELLOW)./ft_ping -$(NC) Project successfully rebuilt! ✨\n"
 
 debug: fclean
-		@make $(NAME) CFLAGS="$(CFLAGS) $(DEBUG)"
-
+		@$(MAKE) --no-print-directory all CFLAGS="$(CFLAGS) $(DEBUG)"
 
 .PHONY: all clean fclean re debug

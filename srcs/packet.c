@@ -1,35 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
+/*   packet.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/08/15 18:13:06 by annabrag          #+#    #+#             */
-/*   Updated: 2026/08/26 20:17:19 by annabrag         ###   ########.fr       */
+/*   Created: 2026/08/26 19:01:23 by annabrag          #+#    #+#             */
+/*   Updated: 2026/08/26 21:10:44 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
 
-static short	_err_args()
-{
-	printf( "%s\n", ERR_PREFIX "Invalid amount of arguments." );
-	return ( EXIT_FAILURE );
-}
+uint16_t	packet_checksum( const void *data, size_t len );
 
-static void		_set_program_name( t_ping *ping, char *name )
-{
-	ping->prog_name = name;
-}
-
-int	main( int argc, char **argv )
-{
-	if (argc != 2)
-		return ( _err_args() );
-
-	t_ping	ping;
-
-	_set_program_name( &ping, argv[0] );
-	return ( SUCCESS );
-}
+size_t		packet_build( t_ping *ping, uint8_t *buf );

@@ -5,6 +5,7 @@
 \**************************/
 
 # include <unistd.h>
+# include <stdlib.h>
 # include <stdio.h>
 # include <string.h>
 # include <errno.h>
@@ -49,14 +50,14 @@ typedef struct s_stats
 
 typedef struct s_ping
 {
-	t_opts				opts;
+	t_opts				options;
 	char				*prog_name;
 	char				*target;
-	char				ip_str[INET_ADDRSTRLEN];
-	struct sockaddr_in	dest;
+	char				ip_str[INET_ADDRSTRLEN];	//	target's IP
+	struct sockaddr_in	dest;						//	target's addr -- destination
 	int					sockfd;
-	uint16_t			id;
-	uint16_t			seq;
+	uint16_t			id;			//	my id
+	uint16_t			seq;		//	current Sequence Number
 	t_stats				stats;
 }	t_ping;
 
@@ -70,5 +71,6 @@ extern volatile sig_atomic_t	g_stop;
  * Prototypes
 \**************************/
 
-uint16_t	checksum( const void *data, size_t len );
-size_t		build_echo_request( t_ping *ping, uint8_t *buf );
+// srcs/packet.c
+uint16_t	packet_checksum( const void *data, size_t len );
+size_t		packet_build( t_ping *ping, uint8_t *buf );

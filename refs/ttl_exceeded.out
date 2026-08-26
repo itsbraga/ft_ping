@@ -1,0 +1,5 @@
+PING 8.8.8.8 (8.8.8.8): 56 data bytes
+36 bytes from _gateway (10.0.2.2): Time to live exceeded
+36 bytes from _gateway (10.0.2.2): Time to live exceeded
+--- 8.8.8.8 ping statistics ---
+2 packets transmitted, 0 packets received, 100% packet loss
