@@ -28,7 +28,7 @@
  * Structs
 \**************************/
 
-typedef struct s_opts
+typedef struct s_options
 {
 	int		verbose;	//	-v
 	int		count;		//	-c, 0 = unlimited
@@ -36,7 +36,7 @@ typedef struct s_opts
 	int		size;		//	-s payload size
 	int		timeout;	//	-w, 0 = none
 	int		linger;		//	-W, 0 = none
-}	t_opts;
+}	t_options;
 
 typedef struct s_stats
 {
@@ -50,7 +50,7 @@ typedef struct s_stats
 
 typedef struct s_ping
 {
-	t_opts				options;
+	t_options			opts;
 	char				*prog_name;
 	char				*target;
 	char				ip_str[INET_ADDRSTRLEN];	//	target's IP
@@ -74,3 +74,5 @@ extern volatile sig_atomic_t	g_stop;
 // srcs/packet.c
 uint16_t	packet_checksum( const void *data, size_t len );
 size_t		packet_build( t_ping *ping, uint8_t *buf );
+
+// void	debug_hexdump( const uint8_t *buf, size_t len );
