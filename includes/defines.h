@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/25 19:17:10 by annabrag          #+#    #+#             */
-/*   Updated: 2026/08/27 17:07:54 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/08/31 16:09:10 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,6 @@
  * Exit codes
 \**************************/
 
-# define SUCCESS 			0
 # define ERR_USAGE			64
 # define RUNTIME_FAILURE	1	//	total loss, unknown host
 

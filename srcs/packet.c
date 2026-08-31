@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/26 19:01:23 by annabrag          #+#    #+#             */
-/*   Updated: 2026/08/27 18:48:09 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/08/31 16:17:18 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,11 +44,14 @@ uint16_t	packet_checksum( const void *data, size_t len )
 		memcpy(&last, words, 1);
 		sum += last;
 	}
-	//	sum >> 16    : the accumulated carries (high 16 bits)
-	//	sum & 0xFFFF : the partial result (low 16 bits)
-	//	Adding them back together is the end-around carry required by
-	//	one's complement arithmetic. while, not if: the fold can itself
-	//	carry (0x0001FFFF -> 0x00010000 -> 0x00000001).
+	/*
+		sum >> 16		the accumulated carries (high 16 bits)
+		sum & 0xFFFF	the partial result (low 16 bits)
+	
+		Adding them back together is the end-around carry required by
+		one's complement arithmetic. while, not if: the fold can itself
+		carry (0x0001FFFF -> 0x00010000 -> 0x00000001).
+	*/
 	while (sum >> 16)
 		sum = (sum >> 16) + (sum & 0xFFFF);
 	return ((uint16_t)~sum);

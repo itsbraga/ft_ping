@@ -9,8 +9,6 @@ set -e
 #		.out   raw output (stdout + stderr merged)
 #		.cat   same, through cat -A: trailing spaces and tabs made visible
 #		.code  exit status (0 success, 64 usage error, 1 runtime failure)
-#
-#	This corpus is the ONLY authority on ft_ping output conformity.
 
 REF_PING="/opt/inetutils/bin/ping"
 REFS_DIR="refs"

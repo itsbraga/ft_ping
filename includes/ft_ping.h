@@ -71,8 +71,13 @@ extern volatile sig_atomic_t	g_stop;
  * Prototypes
 \**************************/
 
+// tools/helpers.c
+short		err_msg( char *reason );
+
 // srcs/packet.c
 uint16_t	packet_checksum( const void *data, size_t len );
 size_t		packet_build( t_ping *ping, uint8_t *buf );
 
-// void	debug_hexdump( const uint8_t *buf, size_t len );
+// srcs/socket.c
+int			socket_init( t_ping *ping );
+int			resolve( t_ping* ping );
