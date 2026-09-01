@@ -33,6 +33,7 @@ uint16_t	packet_checksum( const void *data, size_t len )
 
 	words = (const uint16_t *)data;
 	sum = 0;
+
 	while (len > 1)
 	{
 		sum += *words++;
@@ -44,6 +45,7 @@ uint16_t	packet_checksum( const void *data, size_t len )
 		memcpy(&last, words, 1);
 		sum += last;
 	}
+
 	/*
 		sum >> 16		the accumulated carries (high 16 bits)
 		sum & 0xFFFF	the partial result (low 16 bits)
@@ -68,16 +70,20 @@ size_t	packet_build( t_ping *ping, uint8_t *buf )
 	memset(buf, 0, total);
 	hdr = (struct icmphdr *)buf;
 	payload = buf + ICMP_HDR_SIZE;
+
 	hdr->type = ICMP_ECHO;	// Echo Request (8)
 	hdr->un.echo.id = htons(ping->id);
 	hdr->un.echo.sequence = htons(ping->seq);
+
 	gettimeofday((struct timeval *)payload, NULL);
+
 	i = sizeof(struct timeval);
 	while (i < (size_t)ping->opts.size)
 	{
 		payload[i] = (i - sizeof(struct timeval)) & 0xFF;
 		i++;
 	}
+
 	hdr->checksum = packet_checksum(buf, total);
 	return (total);
 }
