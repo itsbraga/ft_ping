@@ -82,6 +82,8 @@ make -j"$(nproc)" > /dev/null
 make install > /dev/null
 printf "${PG}✔ inetutils installed in ${INET_PREFIX}${NC}\n"
 
+rm -rf "$BUILD_DIR"
+
 #————————————————————————————————————————————————————————
 #	Step 4: CAPABILITIES & VERIFICATION
 #————————————————————————————————————————————————————————

@@ -30,11 +30,13 @@
 
 int	main( void )
 {
-	t_ping		ping = {0};
-	size_t		packet_size;
-	uint8_t		buf[ICMP_HDR_SIZE + MAX_PAYLOAD];
-	ssize_t		sent, received;
-	uint8_t		recv_buf[MAX_PACKET_SIZE + 1];
+	t_ping			ping = {0};
+	size_t			packet_size;
+	uint8_t			buf[ICMP_HDR_SIZE + MAX_PAYLOAD];
+	ssize_t			sent, received;
+	uint8_t			recv_buf[MAX_PACKET_SIZE + 1];
+	struct icmphdr	*icmp;
+	unsigned int	hdr_len;
 
 	ping.opts.size = DEFAULT_PAYLOAD;
 
@@ -48,9 +50,24 @@ int	main( void )
 	if (sent == -1)
 		return (err_msg("Unable to send packet", -1));
 
-	received = socket_recv(&ping, recv_buf, sizeof(recv_buf));
-	if (received == -1)
-		return (EXIT_FAILURE);
+	while (true)
+	{
+		received = socket_recv(&ping, recv_buf, sizeof(recv_buf));
+		if (received == -1)
+			return (EXIT_FAILURE);
+
+		hdr_len = IP_HDR_LEN(recv_buf);
+		if (received < (ssize_t)(hdr_len + ICMP_HDR_SIZE))
+			continue ;
+
+		icmp = (struct icmphdr *)(recv_buf + hdr_len);
+		if (icmp->type != ICMP_ECHOREPLY)
+			continue ;
+		if (ntohs(icmp->un.echo.id) != ping.id)
+			continue ;
+
+		break ;
+	}
 
 	printf("received %zd bytes, IP header = %u bytes\n", received, IP_HDR_LEN(recv_buf));
 	debug_hexdump(recv_buf, received);
