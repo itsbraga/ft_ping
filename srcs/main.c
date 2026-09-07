@@ -6,11 +6,17 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/15 18:13:06 by annabrag          #+#    #+#             */
-/*   Updated: 2026/08/31 16:22:34 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/07 17:31:03 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
+
+static void	handle_sigint( int sig )
+{
+	(void)sig;
+	g_stop = 1;
+}
 
 // static void	_set_program_name( t_ping *ping, char *name )
 // {
@@ -45,12 +51,14 @@ int	main( void )
 
 	packet_size = packet_build(&ping, buf);
 
+	display_header(&ping);
+
 	sent = sendto(ping.sockfd, buf, packet_size, 0,
 					(struct sockaddr *)&ping.dest, sizeof(ping.dest));
 	if (sent == -1)
 		return (err_msg("Unable to send packet", -1));
 
-	while (true)
+	while (1)
 	{
 		received = socket_recv(&ping, recv_buf, sizeof(recv_buf));
 		if (received == -1)
@@ -69,8 +77,7 @@ int	main( void )
 		break ;
 	}
 
-	printf("received %zd bytes, IP header = %u bytes\n", received, IP_HDR_LEN(recv_buf));
-	debug_hexdump(recv_buf, received);
+	display_reply(&ping, recv_buf, received);
 
 	close(ping.sockfd);
 	return (EXIT_SUCCESS);

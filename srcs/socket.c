@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/31 15:13:20 by annabrag          #+#    #+#             */
-/*   Updated: 2026/08/31 16:13:58 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/07 17:24:54 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,9 +26,12 @@ int	resolve( t_ping* ping )
 {
 	memset(&ping->dest, 0, sizeof(ping->dest));
 	ping->dest.sin_family = AF_INET;
+	ping->target = "127.0.0.1";
 
-	if (inet_pton(AF_INET, "127.0.0.1", &ping->dest.sin_addr) != 1)
+	if (inet_pton(AF_INET, ping->target, &ping->dest.sin_addr) != 1)
 		return (EXIT_FAILURE);
+
+	inet_ntop(AF_INET, &ping->dest.sin_addr, ping->ip_str, sizeof(ping->ip_str));
 
 	return (EXIT_SUCCESS);
 }

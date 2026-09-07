@@ -30,12 +30,12 @@
 
 typedef struct s_options
 {
-	int		verbose;	//	-v
-	int		count;		//	-c, 0 = unlimited
-	int		ttl;		//	--ttl, 0 = system default
-	int		size;		//	-s payload size
-	int		timeout;	//	-w, 0 = none
-	int		linger;		//	-W, 0 = none
+	unsigned int	verbose;	//	-v
+	unsigned int	count;		//	-c, 0 = unlimited
+	unsigned int	ttl;		//	--ttl, 0 = system default
+	unsigned int	size;		//	-s payload size
+	unsigned int	timeout;	//	-w, 0 = none
+	unsigned int	linger;		//	-W, 0 = none
 }	t_options;
 
 typedef struct s_stats
@@ -83,3 +83,7 @@ size_t		packet_build( t_ping *ping, uint8_t *buf );
 int			socket_init( t_ping *ping );
 int			resolve( t_ping* ping );
 ssize_t		socket_recv( t_ping *ping, uint8_t *buf, size_t size );
+
+// srcs/display.c
+void		display_header( t_ping *ping );
+void		display_reply( t_ping *ping, const uint8_t* buf, ssize_t received );
