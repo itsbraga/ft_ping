@@ -6,33 +6,41 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/25 19:17:10 by annabrag          #+#    #+#             */
-/*   Updated: 2026/08/31 16:09:10 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/16 19:53:51 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
 
 /**************************\
- * Debug macros
+ * DEBUG MACROS
 \**************************/
 
 # define ERR_PREFIX	"\033[1m\033[31mError: \033[0m"
 
 /**************************\
- * Exit codes
+ * EXIT CODES
 \**************************/
 
 # define ERR_USAGE			64
 # define RUNTIME_FAILURE	1	//	total loss, unknown host
 
 /**************************\
- * Defaults
+ * OPTION PARSING
+\**************************/
+
+# define OPT_HELP	256			//	--help return value, outside the char range of short options
+
+/**************************\
+ * DEFAULTS
 \**************************/
 
 # define DEFAULT_TTL		64
+# define DEFAULT_INTERVAL	1	//	seconds between two Echo Requests
+# define DEFAULT_LINGER		10	//	seconds to wait for late replies once -c is reached
 
 /**************************\
- * Packet layout
+ * PACKET LAYOUT
 \**************************/
 
 /*

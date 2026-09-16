@@ -6,79 +6,34 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/15 18:13:06 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/07 17:31:03 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/16 19:52:24 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
 
-static void	handle_sigint( int sig )
+volatile sig_atomic_t	g_stop = 0;
+
+static void	_handle_sigint( int sig )
 {
 	(void)sig;
 	g_stop = 1;
 }
 
-// static void	_set_program_name( t_ping *ping, char *name )
-// {
-// 	ping->prog_name = name;
-// }
-
-// int	main( int argc, char **argv )
-// {
-// 	if (argc != 2)
-// 		return (err_args("Invalid amount of arguments.", EXIT_FAILURE) );
-
-// 	t_ping	ping;
-
-// 	_set_program_name(&ping, argv[0]);
-// 	return (EXIT_SUCCESS);
-// }
-
-int	main( void )
+int	main( int argc, char **argv )
 {
-	t_ping			ping = {0};
-	size_t			packet_size;
-	uint8_t			buf[ICMP_HDR_SIZE + MAX_PAYLOAD];
-	ssize_t			sent, received;
-	uint8_t			recv_buf[MAX_PACKET_SIZE + 1];
-	struct icmphdr	*icmp;
-	unsigned int	hdr_len;
+	t_ping	p = {0};
+	int		exit_code;
 
-	ping.opts.size = DEFAULT_PAYLOAD;
+	exit_code = init_ping(&p, argc, argv);
+	if (exit_code != EXIT_SUCCESS)
+		return (exit_code);
 
-	if (socket_init(&ping) != EXIT_SUCCESS || resolve(&ping) != EXIT_SUCCESS)
-		return (EXIT_FAILURE);
+	signal(SIGINT, _handle_sigint);
+	display_target_info(&p);
+	ping_loop(&p);
+	// TODO: stats_display(&ping);
 
-	packet_size = packet_build(&ping, buf);
-
-	display_header(&ping);
-
-	sent = sendto(ping.sockfd, buf, packet_size, 0,
-					(struct sockaddr *)&ping.dest, sizeof(ping.dest));
-	if (sent == -1)
-		return (err_msg("Unable to send packet", -1));
-
-	while (1)
-	{
-		received = socket_recv(&ping, recv_buf, sizeof(recv_buf));
-		if (received == -1)
-			return (EXIT_FAILURE);
-
-		hdr_len = IP_HDR_LEN(recv_buf);
-		if (received < (ssize_t)(hdr_len + ICMP_HDR_SIZE))
-			continue ;
-
-		icmp = (struct icmphdr *)(recv_buf + hdr_len);
-		if (icmp->type != ICMP_ECHOREPLY)
-			continue ;
-		if (ntohs(icmp->un.echo.id) != ping.id)
-			continue ;
-
-		break ;
-	}
-
-	display_reply(&ping, recv_buf, received);
-
-	close(ping.sockfd);
-	return (EXIT_SUCCESS);
+	close(p.sockfd);
+	return (p.stats.received > 0 ? EXIT_SUCCESS : RUNTIME_FAILURE);
 }

@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/26 19:01:23 by annabrag          #+#    #+#             */
-/*   Updated: 2026/08/31 16:17:18 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/16 19:00:38 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@
 	The checksum field MUST be zeroed before calling this: it is part of
 	the summed range, and zero is the neutral element of the addition.
 */
-uint16_t	packet_checksum( const void *data, size_t len )
+static uint16_t	_internet_checksum( const void *data, size_t len )
 {
 	const uint16_t	*words;
 	uint32_t		sum;
@@ -33,7 +33,6 @@ uint16_t	packet_checksum( const void *data, size_t len )
 
 	words = (const uint16_t *)data;
 	sum = 0;
-
 	while (len > 1)
 	{
 		sum += *words++;
@@ -45,7 +44,6 @@ uint16_t	packet_checksum( const void *data, size_t len )
 		memcpy(&last, words, 1);
 		sum += last;
 	}
-
 	/*
 		sum >> 16		the accumulated carries (high 16 bits)
 		sum & 0xFFFF	the partial result (low 16 bits)
@@ -59,31 +57,31 @@ uint16_t	packet_checksum( const void *data, size_t len )
 	return ((uint16_t)~sum);
 }
 
-size_t	packet_build( t_ping *ping, uint8_t *buf )
+size_t	build_echo_request( t_ping *p, uint8_t *buf )
 {
+	size_t			total;
 	struct icmphdr	*hdr;
 	uint8_t			*payload;
-	size_t			total;
 	size_t			i;
 
-	total = ICMP_HDR_SIZE + ping->opts.size;
+	total = ICMP_HDR_SIZE + p->opts.size;
 	memset(buf, 0, total);
 	hdr = (struct icmphdr *)buf;
 	payload = buf + ICMP_HDR_SIZE;
 
 	hdr->type = ICMP_ECHO;	// Echo Request (8)
-	hdr->un.echo.id = htons(ping->id);
-	hdr->un.echo.sequence = htons(ping->seq);
+	hdr->un.echo.id = htons(p->id);
+	hdr->un.echo.sequence = htons(p->seq);
 
 	gettimeofday((struct timeval *)payload, NULL);
 
 	i = sizeof(struct timeval);
-	while (i < (size_t)ping->opts.size)
+	while (i < (size_t)p->opts.size)
 	{
 		payload[i] = (i - sizeof(struct timeval)) & 0xFF;
 		i++;
 	}
 
-	hdr->checksum = packet_checksum(buf, total);
+	hdr->checksum = _internet_checksum(buf, total);
 	return (total);
 }

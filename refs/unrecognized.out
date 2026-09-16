@@ -1,0 +1,2 @@
+/opt/inetutils/bin/ping: unrecognized option '--bogus'
+Try 'ping --help' or 'ping --usage' for more information.

@@ -76,7 +76,7 @@ define recap
 	if [ $$C -gt 0 ]; then \
 		printf "\n$(BOLD)$(P_PURPLE)Files compiled %d/%d$(NC)\n" "$$C" "$(TOTAL_FILES)"; \
 	fi
-	@$(RM_PROGRESS)
+	@rm -f $(PROGRESS_FILE)
 	@printf "$(BOLD)$(PINK)Linking $(NAME)...$(NC)\n\n"
 endef
 
