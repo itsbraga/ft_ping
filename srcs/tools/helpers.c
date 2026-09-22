@@ -6,31 +6,26 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/31 15:49:58 by annabrag          #+#    #+#             */
-/*   Updated: 2026/08/31 15:55:08 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/22 17:45:43 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
 
-int	err_msg( char *reason, int exit_code )
+void	errno_msg( const char *prog_name, const char *context )
 {
-	printf("%s%s\n", ERR_PREFIX, reason);
-	return (exit_code);
+	fprintf(stderr, "%s: %s: %s\n", prog_name, context, strerror(errno));
 }
 
-void	debug_hexdump( const uint8_t *buf, size_t len )
+void	err_msg( const char *prog_name, const char *detail )
 {
-	size_t	i;
+	fprintf(stderr, "%s: %s\n", prog_name, detail);
+}
 
-	i = 0;
-	while (i < len)
-	{
-		if (i % 16 == 0)
-			printf("\n0x%04zx:  ", i);
-		printf("%02x", buf[i]);
-		if (i % 2 == 1)
-			printf(" ");
-		i++;
-	}
-	printf("\n");
+const char	*short_name( const char *prog_name )
+{
+	const char	*slash;
+
+	slash = strrchr(prog_name, '/');
+	return (slash ? slash + 1 : prog_name);
 }

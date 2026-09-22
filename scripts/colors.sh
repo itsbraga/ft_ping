@@ -6,7 +6,6 @@ export BOLD="\033[1m"
 export ITAL="\033[3m"
 export UL="\033[4m"
 
-export BLACK="\033[30m"
 export GRAY="\033[90m"
 export RED="\033[31m"
 export GREEN="\033[32m"

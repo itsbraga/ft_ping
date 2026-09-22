@@ -1,17 +1,7 @@
-# Prerequisites
+*.DS_Store
+*.vscode
+.progress_count
 *.d
-
-# Object files
 *.o
-*.ko
-*.obj
-*.elf
-
-# Libraries
 *.lib
 *.a
-*.la
-*.lo
-
-# Makefile progress bar helper
-.progress_count

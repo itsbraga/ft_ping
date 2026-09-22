@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/15 18:13:06 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/16 19:52:24 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/22 17:45:58 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,26 +14,23 @@
 
 volatile sig_atomic_t	g_stop = 0;
 
-static void	_handle_sigint( int sig )
+static void	_handle_sigint( int sig __attribute__((unused)) )
 {
-	(void)sig;
 	g_stop = 1;
 }
 
 int	main( int argc, char **argv )
 {
-	t_ping	p = {0};
-	int		exit_code;
+	t_ping	p;
+	int		ret;
 
-	exit_code = init_ping(&p, argc, argv);
-	if (exit_code != EXIT_SUCCESS)
-		return (exit_code);
-
+	if (argc < 2)
+		fprintf(stderr, "%s %s\n", ERR_PREFIX, "Not enough arguments");
+	setvbuf(stdout, NULL, _IOLBF, 0);
+	ping_init(&p, argv);
+	ping_setup(&p, argc, argv);
 	signal(SIGINT, _handle_sigint);
-	display_target_info(&p);
-	ping_loop(&p);
-	// TODO: stats_display(&ping);
-
+	ret = ping_run(&p);
 	close(p.sockfd);
-	return (p.stats.received > 0 ? EXIT_SUCCESS : RUNTIME_FAILURE);
+	return (ret);
 }
