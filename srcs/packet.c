@@ -6,11 +6,11 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/26 19:01:23 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/16 19:00:38 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/22 03:28:03 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "ft_ping.h"
+#include "../includes/ft_ping.h"
 
 /*
 	Internet checksum — RFC 1071.
@@ -25,7 +25,7 @@
 	The checksum field MUST be zeroed before calling this: it is part of
 	the summed range, and zero is the neutral element of the addition.
 */
-static uint16_t	_internet_checksum( const void *data, size_t len )
+static uint16_t	_internet_checksum( const void *data, size_t size )
 {
 	const uint16_t	*words;
 	uint32_t		sum;
@@ -33,12 +33,12 @@ static uint16_t	_internet_checksum( const void *data, size_t len )
 
 	words = (const uint16_t *)data;
 	sum = 0;
-	while (len > 1)
+	while (size > 1)
 	{
 		sum += *words++;
-		len -= 2;	// 2 bytes per round
+		size -= 2;	// 2 bytes per round
 	}
-	if (len == 1)
+	if (size == 1)
 	{
 		last = 0;
 		memcpy(&last, words, 1);
@@ -59,19 +59,19 @@ static uint16_t	_internet_checksum( const void *data, size_t len )
 
 size_t	build_echo_request( t_ping *p, uint8_t *buf )
 {
-	size_t			total;
-	struct icmphdr	*hdr;
+	size_t			icmp_size;
+	struct icmphdr	*icmp_hdr;
 	uint8_t			*payload;
 	size_t			i;
 
-	total = ICMP_HDR_SIZE + p->opts.size;
-	memset(buf, 0, total);
-	hdr = (struct icmphdr *)buf;
+	icmp_size = ICMP_HDR_SIZE + p->opts.size;
+	memset(buf, 0, icmp_size);
+	icmp_hdr = (struct icmphdr *)buf;
 	payload = buf + ICMP_HDR_SIZE;
 
-	hdr->type = ICMP_ECHO;	// Echo Request (8)
-	hdr->un.echo.id = htons(p->id);
-	hdr->un.echo.sequence = htons(p->seq);
+	icmp_hdr->type = ICMP_ECHO;	// Echo Request (8)
+	icmp_hdr->un.echo.id = htons(p->id);
+	icmp_hdr->un.echo.sequence = htons(p->seq);
 
 	gettimeofday((struct timeval *)payload, NULL);
 
@@ -82,6 +82,6 @@ size_t	build_echo_request( t_ping *p, uint8_t *buf )
 		i++;
 	}
 
-	hdr->checksum = _internet_checksum(buf, total);
-	return (total);
+	icmp_hdr->checksum = _internet_checksum(buf, icmp_size);
+	return (icmp_size);
 }

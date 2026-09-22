@@ -6,11 +6,11 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/31 15:13:20 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/16 19:12:25 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/22 03:39:56 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "ft_ping.h"
+#include "../includes/ft_ping.h"
 
 int	create_socket( t_ping *p )
 {
@@ -45,28 +45,29 @@ int	resolve_target( t_ping *p )
 	memcpy(&p->dest, res->ai_addr, sizeof(p->dest));
 	snprintf(p->hostname, sizeof(p->hostname), "%s",
 		res->ai_canonname ? res->ai_canonname : p->target);
+
 	freeaddrinfo(res);
 
-	inet_ntop(AF_INET, &p->dest.sin_addr, p->ip_str, sizeof(p->ip_str));
+	inet_ntop(AF_INET, &p->dest.sin_addr, p->target_ip_str, sizeof(p->target_ip_str));
 	return (EXIT_SUCCESS);
 }
 
-ssize_t	recv_packet( t_ping *p, uint8_t *buf, size_t size )
+ssize_t	recv_packet( t_ping *p, uint8_t *buf, size_t buf_size )
 {
 	struct sockaddr_in	from;
 	socklen_t			from_len;
-	ssize_t				received;
+	ssize_t				datagram_size;
 
 	from_len = sizeof(from);
 	//	MSG_DONTWAIT: poll() already said data is there, but a readiness
 	//	report is only a hint, the loop must never block here
-	received = recvfrom(p->sockfd, buf, size, MSG_DONTWAIT,
+	datagram_size = recvfrom(p->sockfd, buf, buf_size, MSG_DONTWAIT,
 						(struct sockaddr *)&from, &from_len);
-	if (received == -1)
+	if (datagram_size == -1)
 	{
 		if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)
 			return (-1);
 		return (err_msg("Unable to receive packet", -1));
 	}
-	return (received);
+	return (datagram_size);
 }
