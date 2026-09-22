@@ -6,11 +6,11 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/15 18:13:06 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/22 17:45:58 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/22 17:56:18 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "ft_ping.h"
+#include "../includes/ft_ping.h"
 
 volatile sig_atomic_t	g_stop = 0;
 

@@ -6,11 +6,11 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/11 17:33:03 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/22 17:46:04 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/22 17:55:25 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "ft_ping.h"
+#include "../includes/ft_ping.h"
 
 /*
 	Builds an Echo Request from the current sequence number and hands it
@@ -94,22 +94,54 @@ static void	_report_reply( t_ping *p, const uint8_t *buf, size_t icmp_size,
 
 /*
 	Consumes exactly one datagram, which poll() reported as ready.
+<<<<<<< HEAD
 	A raw ICMP socket receives every ICMP datagram the host gets, so
 	anything that is not a well-formed Echo Reply carrying our id is
 	dropped. The run ends as soon as every expected reply is in
+=======
+
+	A raw ICMP socket receives every ICMP datagram the host gets, not just
+	ours, so everything that is not an Echo Reply carrying our id is dropped:
+
+		- too short to hold an IP + ICMP header	-> truncated/garbage
+		- type != ICMP_ECHOREPLY				-> someone else's traffic
+		- id != p->id						-> another ping process
+>>>>>>> 9329f91c2c099298d958e4ef8ed4d91d42a8e80c
 */
 static t_step	_handle_reply( t_ping *p )
 {
+<<<<<<< HEAD
 	uint8_t					buf[MAX_DATAGRAM_SIZE + 1];
 	struct sockaddr_in		from;
 	ssize_t					size;
 	const struct icmphdr	*icmp_hdr;
+=======
+	uint8_t			buf[MAX_DATAGRAM_SIZE + 1];
+	ssize_t			datagram_size;
+	struct icmphdr	*icmp_hdr;
+	unsigned int	ip_hdr_size;
+
+	datagram_size = recv_packet(p, buf, sizeof(buf));
+	if (datagram_size == -1)
+		return ;
+
+	ip_hdr_size = IP_HDR_SIZE(buf);
+	if (datagram_size < (ssize_t)(ip_hdr_size + ICMP_HDR_SIZE))
+		return ;
+
+	icmp_hdr = (struct icmphdr *)(buf + ip_hdr_size);
+	if (icmp_hdr->type != ICMP_ECHOREPLY)
+		return ;
+	if (ntohs(icmp_hdr->un.echo.id) != p->id)
+		return ;
+>>>>>>> 9329f91c2c099298d958e4ef8ed4d91d42a8e80c
 
 	size = recv_packet(p, buf, sizeof(buf), &from);
 	icmp_hdr = _icmp_header(buf, size);
 	if (!icmp_hdr || icmp_hdr->type != ICMP_ECHOREPLY || ntohs(icmp_hdr->un.echo.id) != p->id)
 		return (STEP_CONTINUE);
 	p->stats.received++;
+<<<<<<< HEAD
 	_report_reply(p, buf, (size_t)size - IP_HDR_SIZE(buf), &from);
 	if (_all_received(p))
 		return (STEP_DONE);
@@ -117,6 +149,22 @@ static t_step	_handle_reply( t_ping *p )
 }
 
 static long long	_now_ms( void )
+=======
+	display_reply(p, buf, datagram_size);
+}
+
+static void	_set_deadline( struct timespec *deadline, time_t seconds )
+{
+	clock_gettime(CLOCK_MONOTONIC, deadline);
+	deadline->tv_sec += seconds;
+}
+
+/*
+	Rounded up to the next millisecond: truncating would wake poll() just
+	before the deadline, and the loop would spin with a 0 ms timeout
+*/
+static int	_ms_until( const struct timespec *deadline )
+>>>>>>> 9329f91c2c099298d958e4ef8ed4d91d42a8e80c
 {
 	struct timespec	now;
 
@@ -135,9 +183,20 @@ static int	_ms_until( long long target_ms )
 	left = target_ms - _now_ms();
 	if (left < 0)
 		return (0);
+<<<<<<< HEAD
 	if (left > INT_MAX)
 		return (INT_MAX);
 	return ((int)left);
+=======
+
+	return ((int)((remaining_ns + 999999) / 1000000));
+}
+
+//	opts.count == 0 means unlimited; -c counts requests sent, not replies
+static bool	_count_reached( const t_ping *p, size_t transmitted )
+{
+	return (p->opts.count && transmitted >= p->opts.count);
+>>>>>>> 9329f91c2c099298d958e4ef8ed4d91d42a8e80c
 }
 
 /*
@@ -148,6 +207,7 @@ static int	_ms_until( long long target_ms )
 */
 static t_step	_do_next_action( t_ping *p, long long *next_action_ms )
 {
+<<<<<<< HEAD
 	if (_all_sent(p))
 		return (STEP_DONE);
 	if (_send_echo_request(p) != EXIT_SUCCESS)
@@ -159,6 +219,25 @@ static t_step	_do_next_action( t_ping *p, long long *next_action_ms )
 }
 
 static int	_ping_loop( t_ping *p )
+=======
+	if (!_count_reached(p, p->stats.transmitted))
+	{
+		if (_send_echo_request(p) != EXIT_SUCCESS)
+			return (false);
+		_set_deadline(deadline, DEFAULT_INTERVAL);
+		return (true);
+	}
+
+	if (*draining)
+		return (false);
+	*draining = true;
+
+	_set_deadline(deadline, p->opts.linger);
+	return (true);
+}
+
+void	ping_loop( t_ping *p )
+>>>>>>> 9329f91c2c099298d958e4ef8ed4d91d42a8e80c
 {
 	struct pollfd	pfd;
 	long long		next_action_ms;

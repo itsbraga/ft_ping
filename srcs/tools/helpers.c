@@ -6,11 +6,11 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/31 15:49:58 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/22 17:45:43 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/22 17:55:51 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "ft_ping.h"
+#include "../../includes/ft_ping.h"
 
 void	errno_msg( const char *prog_name, const char *context )
 {

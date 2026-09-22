@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 15:54:02 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/22 17:45:51 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/22 17:56:12 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,7 @@ void	display_target_info( t_ping *p )
 	printf("PING %s (%s): %zu data bytes", p->hostname, p->target_ip_str, p->opts.size);
 	if (p->opts.verbose)
 		printf(", id 0x%04x = %u", p->id, p->id);
+
 	printf("\n");
 }
 

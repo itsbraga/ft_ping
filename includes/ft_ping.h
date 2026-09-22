@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/15 19:00:43 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/22 17:38:43 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/22 17:56:47 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,17 +45,6 @@
 /**************************\
  *	ENUMS
 \**************************/
-
-typedef enum e_opt_id
-{
-	OPT_VERBOSE,
-	OPT_HELP,
-	OPT_COUNT,
-	OPT_SIZE,
-	OPT_TTL,
-	OPT_TIMEOUT,
-	OPT_LINGER
-}	t_opt_id;
 
 typedef enum e_step
 {

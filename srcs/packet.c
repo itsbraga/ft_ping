@@ -6,11 +6,11 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/26 19:01:23 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/22 17:46:01 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/22 17:56:57 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "ft_ping.h"
+#include "../includes/ft_ping.h"
 
 /*
 	Internet checksum — RFC 1071.

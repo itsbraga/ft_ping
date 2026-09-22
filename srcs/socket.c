@@ -6,11 +6,11 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/31 15:13:20 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/22 17:46:06 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/22 17:57:08 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "ft_ping.h"
+#include "../includes/ft_ping.h"
 
 int	create_socket( t_ping *p )
 {
@@ -71,6 +71,7 @@ int	resolve_target( t_ping *p )
 	memcpy(&p->dest, res->ai_addr, sizeof(p->dest));
 	snprintf(p->hostname, sizeof(p->hostname), "%s",
 		res->ai_canonname ? res->ai_canonname : p->target);
+
 	freeaddrinfo(res);
 	inet_ntop(AF_INET, &p->dest.sin_addr, p->target_ip_str, sizeof(p->target_ip_str));
 	return (EXIT_SUCCESS);
