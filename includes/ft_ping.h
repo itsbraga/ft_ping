@@ -135,6 +135,8 @@ void		display_missing_argument( const char *prog, int opt );
 void		display_invalid_value( const char *prog, const char *value, const char *near );
 void		display_value_too_small( const char *prog, const char *arg );
 void		display_value_too_big( const char *prog, const char *arg );
+void		display_icmp_error( const struct sockaddr_in *from, size_t icmp_size,
+				uint8_t type, uint8_t code );
 void		display_help( const char *prog );
 void		display_target_info( t_ping *p );
 void		display_reply( const struct sockaddr_in *from, size_t icmp_size, uint16_t seq,

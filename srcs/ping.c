@@ -6,7 +6,7 @@
 /*   By: panther <panther@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/11 17:33:03 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/22 23:44:07 by panther          ###   ########.fr       */
+/*   Updated: 2026/09/23 16:20:30 by panther          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,31 @@ static bool	_all_sent( const t_ping *p )
 static bool	_all_received( const t_ping *p )
 {
 	return (p->opts.count && p->stats.received >= p->opts.count);
+}
+
+/*
+	Checks whether an ICMP error (Dest Unreachable (3) or Time Exceeded (11))
+	was triggered by one of our Echo Requests. The error payload carries
+	the original IP header followed by the first 8 bytes of the original
+	ICMP datagram, which is enough to read type and id
+*/
+static bool	_is_our_error( const struct icmphdr *err, size_t icmp_size,
+				uint16_t our_id )
+{
+	const uint8_t			*inner_ip;
+	size_t					ihl;
+	const struct icmphdr	*orig;
+
+	if (err->type != ICMP_DEST_UNREACH && err->type != ICMP_TIME_EXCEEDED)
+		return (false);
+	if (icmp_size < ICMP_HDR_SIZE + sizeof(struct ip))
+		return (false);
+	inner_ip = (const uint8_t *)err + ICMP_HDR_SIZE;
+	ihl = IP_HDR_SIZE(inner_ip);
+	if (icmp_size < ICMP_HDR_SIZE + ihl + ICMP_HDR_SIZE)
+		return (false);
+	orig = (const struct icmphdr *)(inner_ip + ihl);
+	return (orig->type == ICMP_ECHO && ntohs(orig->un.echo.id) == our_id);
 }
 
 /*
@@ -103,17 +128,25 @@ static t_step	_handle_reply( t_ping *p )
 	struct sockaddr_in		from;
 	ssize_t					size;
 	const struct icmphdr	*icmp_hdr;
+	size_t					icmp_size;
 
 	size = recv_packet(p, buf, sizeof(buf), &from);
 	if (size < 0)
 		return (STEP_CONTINUE);
 	icmp_hdr = _icmp_header(buf, size);
-	if (!icmp_hdr || icmp_hdr->type != ICMP_ECHOREPLY || ntohs(icmp_hdr->un.echo.id) != p->id)
+	if (!icmp_hdr)
 		return (STEP_CONTINUE);
-	p->stats.received++;
-	_report_reply(p, buf, (size_t)size - IP_HDR_SIZE(buf), &from);
-	if (_all_received(p))
-		return (STEP_DONE);
+	icmp_size = (size_t)size - IP_HDR_SIZE(buf);
+	if (icmp_hdr->type == ICMP_ECHOREPLY && ntohs(icmp_hdr->un.echo.id) == p->id)
+	{
+		p->stats.received++;
+		_report_reply(p, buf, icmp_size, &from);
+		if (_all_received(p))
+			return (STEP_DONE);
+		return (STEP_CONTINUE);
+	}
+	if (_is_our_error(icmp_hdr, icmp_size, p->id))
+		display_icmp_error(&from, icmp_size, icmp_hdr->type, icmp_hdr->code);
 	return (STEP_CONTINUE);
 }
 
@@ -159,15 +192,32 @@ static t_step	_do_next_action( t_ping *p, long long *next_action_ms )
 	return (STEP_CONTINUE);
 }
 
-static t_step	_handle_next_event( t_ping *p, long long *next_action_ms )
+/*
+	Returns the earliest of the two deadlines so poll() never oversleeps.
+	When -w is not set, deadline_ms is ignored (set to LLONG_MAX)
+*/
+static int	_poll_timeout( long long next_action_ms, long long deadline_ms )
+{
+	long long	wake_at;
+
+	wake_at = next_action_ms;
+	if (deadline_ms < wake_at)
+		wake_at = deadline_ms;
+	return (_ms_until(wake_at));
+}
+
+static t_step	_handle_next_event( t_ping *p, long long *next_action_ms,
+					long long deadline_ms )
 {
 	struct pollfd	pfd;
 	int				ready;
 
 	pfd = (struct pollfd){.fd = p->sockfd, .events = POLLIN};
-	ready = poll(&pfd, 1, _ms_until(*next_action_ms));
+	ready = poll(&pfd, 1, _poll_timeout(*next_action_ms, deadline_ms));
 	if (ready > 0)
 		return (_handle_reply(p));
+	if (p->opts.timeout && _now_ms() >= deadline_ms)
+		return (STEP_DONE);
 	if (ready == 0)
 		return (_do_next_action(p, next_action_ms));
 	if (errno == EINTR)
@@ -179,12 +229,17 @@ static t_step	_handle_next_event( t_ping *p, long long *next_action_ms )
 static int	_ping_loop( t_ping *p )
 {
 	long long	next_action_ms;
+	long long	deadline_ms;
 	t_step		step;
 
 	next_action_ms = _now_ms();
+	if (p->opts.timeout)
+		deadline_ms = next_action_ms + p->opts.timeout * 1000;
+	else
+		deadline_ms = LLONG_MAX;
 	step = STEP_CONTINUE;
 	while (!g_stop && step == STEP_CONTINUE)
-		step = _handle_next_event(p, &next_action_ms);
+		step = _handle_next_event(p, &next_action_ms, deadline_ms);
 	if (step == STEP_FAILED)
 		return (RUNTIME_FAILURE);
 	return (EXIT_SUCCESS);

@@ -58,6 +58,51 @@ void	display_value_too_big( const char *prog, const char *arg )
 	fprintf(stderr, "%s: option value too big: %s\n", prog, arg);
 }
 
+static const char	*_unreach_str( uint8_t code )
+{
+	static const char	*msg[] = {
+		"Destination Net Unreachable",
+		"Destination Host Unreachable",
+		"Destination Protocol Unreachable",
+		"Destination Port Unreachable",
+		"Frag needed and DF set",
+		"Source Route Failed",
+		"Destination Net Unknown",
+		"Destination Host Unknown",
+		"Source Host Isolated",
+		"Destination Net Prohibited",
+		"Destination Host Prohibited",
+		"Destination Net Unreachable for TOS",
+		"Destination Host Unreachable for TOS",
+		"Communication Administratively Prohibited",
+		"Host Precedence Violation",
+		"Precedence Cutoff in Effect",
+	};
+
+	if (code < sizeof(msg) / sizeof(msg[0]))
+		return (msg[code]);
+	return ("Dest Unreachable, Unknown Code");
+}
+
+void	display_icmp_error( const struct sockaddr_in *from, size_t icmp_size,
+			uint8_t type, uint8_t code )
+{
+	char	addr[INET_ADDRSTRLEN];
+
+	inet_ntop(AF_INET, &from->sin_addr, addr, sizeof(addr));
+	printf("%zu bytes from %s: ", icmp_size, addr);
+	if (type == ICMP_DEST_UNREACH)
+		printf("%s", _unreach_str(code));
+	else if (type == ICMP_TIME_EXCEEDED)
+	{
+		if (code == 0)
+			printf("Time to live exceeded");
+		else
+			printf("Frag reassembly time exceeded");
+	}
+	printf("\n");
+}
+
 void	display_help( const char *prog )
 {
 	printf("Usage: %s [OPTION...] HOST ...\n", short_name(prog));
