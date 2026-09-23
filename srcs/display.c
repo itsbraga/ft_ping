@@ -157,7 +157,13 @@ void	display_stats( const char *host, const t_stats *s, size_t payload_size )
 	printf("%zu packets transmitted, ", s->transmitted);
 	printf("%zu packets received, ", s->received);
 	if (s->transmitted != 0)
-		printf("%d%% packet loss", (int)(((s->transmitted - s->received) * 100) / s->transmitted));
+	{
+		if (s->received > s->transmitted)
+			printf("0%% packet loss");
+		else
+			printf("%d%% packet loss",
+				(int)(((s->transmitted - s->received) * 100) / s->transmitted));
+	}
 	printf("\n");
 	if (s->received && payload_size >= sizeof(struct timeval))
 	{

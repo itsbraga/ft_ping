@@ -15,6 +15,7 @@
 static void	_set_default_options( t_options *o )
 {
 	o->size = DEFAULT_PAYLOAD_SIZE;
+	o->ttl = DEFAULT_TTL;
 	o->linger = DEFAULT_LINGER;
 }
 

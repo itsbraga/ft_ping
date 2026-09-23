@@ -24,7 +24,7 @@ static size_t	_parse_number( const char *prog, const char *arg, size_t max,
 	{
 		errno = 0;
 		n = strtoul(arg, &endptr, 10);
-		if (*endptr != '\0')
+		if (*endptr != '\0' || endptr == arg)
 			display_invalid_value(prog, arg, endptr);
 		else if (errno == ERANGE || (max != 0 && n > max))
 			display_value_too_big(prog, arg);

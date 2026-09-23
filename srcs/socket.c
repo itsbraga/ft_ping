@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   socket.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
+/*   By: panther <panther@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/31 15:13:20 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/22 17:57:08 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/24 00:40:59 by panther          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ int	resolve_target( t_ping *p )
 	hints.ai_flags = AI_CANONNAME;
 	if (getaddrinfo(p->target, NULL, &hints, &res) != 0)
 	{
-		err_msg(p->prog_name, "unknown host");
+		fprintf(stderr, "%s: unknown host %s\n", short_name(p->prog_name), p->target);
 		return (RUNTIME_FAILURE);
 	}
 	memcpy(&p->dest, res->ai_addr, sizeof(p->dest));
