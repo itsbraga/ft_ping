@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/ft_ping.h"
+#include "ft_ping.h"
 
 int	create_socket( t_ping *p )
 {

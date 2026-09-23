@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/ft_ping.h"
+#include "ft_ping.h"
 
 /*
 	Internet checksum — RFC 1071.

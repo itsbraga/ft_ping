@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../includes/ft_ping.h"
+#include "ft_ping.h"
 
 volatile sig_atomic_t	g_stop = 0;
 

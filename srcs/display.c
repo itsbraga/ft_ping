@@ -3,54 +3,54 @@
 /*                                                        :::      ::::::::   */
 /*   display.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
+/*   By: panther <panther@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/07 15:54:02 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/22 17:56:12 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/24 00:15:18 by panther          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
 
-static void	_display_try_help( const char *prog_name )
+static void	_display_try_help( const char *prog )
 {
 	fprintf(stderr, "Try '%s --help' or '%s --usage' for more information.\n",
-		short_name(prog_name), short_name(prog_name));
+		short_name(prog), short_name(prog));
 }
 
-void	display_missing_host( const char *prog_name )
+void	display_missing_host( const char *prog )
 {
-	fprintf(stderr, "%s: missing host operand\n", short_name(prog_name));
-	_display_try_help(prog_name);
+	fprintf(stderr, "%s: missing host operand\n", short_name(prog));
+	_display_try_help(prog);
 }
 
-void	display_invalid_option( const char *prog_name, int opt )
+void	display_invalid_option( const char *prog, int opt )
 {
-	fprintf(stderr, "%s: invalid option -- '%c'\n", prog_name, opt);
-	_display_try_help(prog_name);
+	fprintf(stderr, "%s: invalid option -- '%c'\n", prog, opt);
+	_display_try_help(prog);
 }
 
-void	display_unrecognized_option( const char *prog_name, const char *arg )
+void	display_unrecognized_option( const char *prog, const char *arg )
 {
-	fprintf(stderr, "%s: unrecognized option '%s'\n", prog_name, arg);
-	_display_try_help(prog_name);
+	fprintf(stderr, "%s: unrecognized option '%s'\n", prog, arg);
+	_display_try_help(prog);
 }
 
-void	display_missing_argument( const char *prog_name, int opt )
+void	display_missing_argument( const char *prog, int opt )
 {
-	fprintf(stderr, "%s: option requires an argument -- '%c'\n", prog_name, opt);
-	_display_try_help(prog_name);
+	fprintf(stderr, "%s: option requires an argument -- '%c'\n", prog, opt);
+	_display_try_help(prog);
 }
 
-void	display_invalid_value( const char *prog_name, const char *value,
+void	display_invalid_value( const char *prog, const char *value,
 			const char *near )
 {
-	fprintf(stderr, "%s: invalid value (`%s' near `%s')\n", prog_name, value, near);
+	fprintf(stderr, "%s: invalid value (`%s' near `%s')\n", prog, value, near);
 }
 
-void	display_help( const char *prog_name )
+void	display_help( const char *prog )
 {
-	printf("Usage: %s [OPTION...] HOST ...\n", short_name(prog_name));
+	printf("Usage: %s [OPTION...] HOST ...\n", short_name(prog));
 	fputs(
 		"Send ICMP ECHO_REQUEST packets to network hosts.\n"
 		"\n"
@@ -89,7 +89,7 @@ void	display_reply( const struct sockaddr_in *from, size_t icmp_size, uint16_t s
 	char	addr[INET_ADDRSTRLEN];
 
 	inet_ntop(AF_INET, &from->sin_addr, addr, sizeof(addr));
-	printf("%zd bytes from %s: icmp_seq=%u ttl=%u", icmp_size, addr, seq, ttl);
+	printf("%zu bytes from %s: icmp_seq=%u ttl=%u", icmp_size, addr, seq, ttl);
 	if (rtt)
 		printf(" time=%.3f ms", *rtt);
 	printf("\n");
@@ -100,7 +100,8 @@ void	display_stats( const char *host, const t_stats *s, size_t payload_size )
 	double	avg;
 
 	printf("--- %s ping statistics ---\n", host);
-	printf("%zu packets transmitted, %zu packets received, ", s->transmitted, s->received);
+	printf("%zu packets transmitted, ", s->transmitted);
+	printf("%zu packets received, ", s->received);
 	if (s->transmitted != 0)
 		printf("%d%% packet loss", (int)(((s->transmitted - s->received) * 100) / s->transmitted));
 	printf("\n");

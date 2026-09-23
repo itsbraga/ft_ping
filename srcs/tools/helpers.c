@@ -10,22 +10,22 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../includes/ft_ping.h"
+#include "ft_ping.h"
 
-void	errno_msg( const char *prog_name, const char *context )
+void	errno_msg( const char *prog, const char *context )
 {
-	fprintf(stderr, "%s: %s: %s\n", prog_name, context, strerror(errno));
+	fprintf(stderr, "%s: %s: %s\n", prog, context, strerror(errno));
 }
 
-void	err_msg( const char *prog_name, const char *detail )
+void	err_msg( const char *prog, const char *detail )
 {
-	fprintf(stderr, "%s: %s\n", prog_name, detail);
+	fprintf(stderr, "%s: %s\n", prog, detail);
 }
 
-const char	*short_name( const char *prog_name )
+const char	*short_name( const char *prog )
 {
 	const char	*slash;
 
-	slash = strrchr(prog_name, '/');
-	return (slash ? slash + 1 : prog_name);
+	slash = strrchr(prog, '/');
+	return (slash ? slash + 1 : prog);
 }
