@@ -21,7 +21,7 @@ PINK		:=	\033[38;2;255;182;193m
 NAME		:=	ft_ping
 INC			:=	-I includes/
 
-GCC			:=	gcc
+CC			:=	cc
 CFLAGS		:=	-Wall -Wextra -Werror
 DEPFLAGS	:=	-MMD -MP
 LDFLAGS		:=	-lm
@@ -31,7 +31,7 @@ define display_ascii_art
 	@printf "%b\n" "$(1) ____  ____       ____  __  __ _   ___ \n(  __)(_  _)     (  _ \(  )(  ( \ / __)\n ) _)   )(  ____  ) __/ )( /    /( (_ \\n(__)   (__)(____)(__)  (__)\_)__) \___/\n"
 endef
 
-COMPILE		=	$(GCC) $(CFLAGS) $(DEPFLAGS) $(INC) -c $< -o $@
+COMPILE		=	$(CC) $(CFLAGS) $(DEPFLAGS) $(INC) -c $< -o $@
 
 #————————————————————————————————————————————————————————
 #	SOURCES
@@ -93,7 +93,7 @@ $(OBJS_DIR)%.o: $(SRCS_DIR)%.c
 
 $(NAME): $(OBJS)
 		$(call recap)
-		@$(GCC) $(CFLAGS) $(INC) $(OBJS) -o $(NAME) $(LDFLAGS)
+		@$(CC) $(CFLAGS) $(INC) $(OBJS) -o $(NAME) $(LDFLAGS)
 		@printf "$(BOLD)========================================\n"
 		$(call display_ascii_art,$(P_PURPLE))
 		@printf "$(BOLD)==============$(BLINK)$(PINK)   READY!   $(NC)$(BOLD)==============$(NC)\n\n"

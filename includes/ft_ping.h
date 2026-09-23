@@ -40,7 +40,6 @@
 # include <getopt.h>
 
 # include "defines.h"
-# include "colors.h"
 
 /**************************\
  *	ENUMS
