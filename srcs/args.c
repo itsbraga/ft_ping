@@ -3,76 +3,115 @@
 /*                                                        :::      ::::::::   */
 /*   args.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
+/*   By: panther <panther@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/22 02:39:08 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/22 17:55:57 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/22 23:17:12 by panther          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
 
-static int	_parse_count( t_ping *p, const char *arg )
+static size_t	_parse_number( const char *prog, const char *arg, size_t max,
+					bool allow_zero )
 {
-	char	*endptr;
+	char			*endptr;
+	unsigned long	n;
 
-	p->opts.count = strtoul(arg, &endptr, 10);
-	if (*endptr != '\0')
+	if (arg[0] == '-')
+		display_invalid_value(prog, arg, arg);
+	else
 	{
-		display_invalid_value(p->prog_name, arg, endptr);
-		return (RUNTIME_FAILURE);
+		errno = 0;
+		n = strtoul(arg, &endptr, 10);
+		if (*endptr != '\0')
+			display_invalid_value(prog, arg, endptr);
+		else if (errno == ERANGE || (max != 0 && n > max))
+			display_value_too_big(prog, arg);
+		else if (n == 0 && !allow_zero)
+			display_value_too_small(prog, arg);
+		else
+			return (n);
 	}
-	return (EXIT_SUCCESS);
+	exit(EXIT_USAGE);
 }
 
-static bool	_is_help_request( int opt )
-{
-	return (opt == OPT_HELP || (opt == '?' && optopt == '?'));
-}
-
-static int	_reject_option( t_ping *p, int opt, char **argv )
+/*
+	The return value tells which kind of error, optopt which option caused
+	it: a short one is reported by its letter, a long one leaves optopt at
+	zero and is read back from the command line instead
+*/
+static void	_reject_option( const char *prog, int opt, char **argv )
 {
 	if (opt == ':')
-		display_missing_argument(p->prog_name, optopt);
+		display_missing_argument(prog, optopt);
 	else if (optopt)
-		display_invalid_option(p->prog_name, optopt);
+		display_invalid_option(prog, optopt);
 	else
-		display_unrecognized_option(p->prog_name, argv[optind - 1]);
-	return (EXIT_USAGE);
+		display_unrecognized_option(prog, argv[optind - 1]);
+	exit(EXIT_USAGE);
 }
 
-int	parse_options( t_ping *p, int argc, char **argv )
+static void	_apply_option( t_options *o, int opt, char **argv )
+{
+	switch (opt)
+	{
+		case '?':
+			display_help(argv[0]);
+			exit(EXIT_SUCCESS);
+		case 'v':
+			o->verbose = true;
+			break;
+		case 'c':
+			o->count = _parse_number(argv[0], optarg, 0, true);
+			break;
+		case 's':
+			o->size = _parse_number(argv[0], optarg, MAX_PAYLOAD_SIZE, true);
+			break;
+		case 'w':
+			o->timeout = _parse_number(argv[0], optarg, INT_MAX, false);
+			break;
+		case 'W':
+			o->linger = _parse_number(argv[0], optarg, INT_MAX, false);
+			break;
+		case OPT_TTL:
+			o->ttl = _parse_number(argv[0], optarg, MAX_TTL, false);
+			break;
+		default:
+			_reject_option(argv[0], opt, argv);
+	}
+}
+
+/*
+	GNU getopt moves operands after the options, so the host is always
+	at optind, wherever it was typed on the command line
+*/
+static char	*_host_operand( int argc, char **argv )
+{
+	if (optind >= argc)
+	{
+		display_missing_host(argv[0]);
+		exit(EXIT_USAGE);
+	}
+	return (argv[optind]);
+}
+
+char	*parse_options( t_options *o, int argc, char **argv )
 {
 	static const struct option	long_opts[] = {
-		{"help", no_argument, NULL, OPT_HELP},
-		{0, 0, 0, 0}
+		{"help", no_argument, NULL, '?'},
+		{"verbose", no_argument, NULL, 'v'},
+		{"count", required_argument, NULL, 'c'},
+		{"size", required_argument, NULL, 's'},
+		{"ttl", required_argument, NULL, OPT_TTL},
+		{"timeout", required_argument, NULL, 'w'},
+		{"linger", required_argument, NULL, 'W'},
+		{NULL, 0, NULL, 0}
 	};
 	int							opt;
 
 	opterr = 0;
-	while ((opt = getopt_long(argc, argv, ":vc:", long_opts, NULL)) != -1)
-	{
-		//	like argp, help wins immediately and nothing has been allocated yet
-		if (_is_help_request(opt))
-		{
-			display_help(p->prog_name);
-			exit(EXIT_SUCCESS);
-		}
-		else if (opt == 'v')
-			p->opts.verbose = 1;
-		else if (opt == 'c')
-		{
-			if (_parse_count(p, optarg) != EXIT_SUCCESS)
-				return (RUNTIME_FAILURE);
-		}
-		else
-			return (_reject_option(p, opt, argv));
-	}
-	if (optind >= argc)
-	{
-		display_missing_host(p->prog_name);
-		return (EXIT_USAGE);
-	}
-	p->target = argv[optind];
-	return (EXIT_SUCCESS);
+	while ((opt = getopt_long(argc, argv, ":?vc:s:w:W:", long_opts, NULL)) != -1)
+		_apply_option(o, opt, argv);
+	return (_host_operand(argc, argv));
 }

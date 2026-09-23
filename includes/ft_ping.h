@@ -111,13 +111,14 @@ void		ping_init( t_ping *p, char **argv );
 int			ping_setup( t_ping *p, int argc, char **argv );
 
 //	srcs/args.c
-int			parse_options( t_ping *p, int argc, char **argv );
+char		*parse_options( t_options *o, int argc, char **argv );
 
 //	srcs/packet.c
 size_t		build_echo_request( t_ping *p, uint8_t *buf );
 
 //	srcs/socket.c
 int			create_socket( t_ping *p );
+int			apply_socket_options( t_ping *p );
 int			resolve_target( t_ping *p );
 ssize_t		recv_packet( t_ping *p, uint8_t *buf, size_t buf_size, struct sockaddr_in *from );
 
@@ -132,6 +133,8 @@ void		display_invalid_option( const char *prog, int opt );
 void		display_unrecognized_option( const char *prog, const char *arg );
 void		display_missing_argument( const char *prog, int opt );
 void		display_invalid_value( const char *prog, const char *value, const char *near );
+void		display_value_too_small( const char *prog, const char *arg );
+void		display_value_too_big( const char *prog, const char *arg );
 void		display_help( const char *prog );
 void		display_target_info( t_ping *p );
 void		display_reply( const struct sockaddr_in *from, size_t icmp_size, uint16_t seq,

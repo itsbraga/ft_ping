@@ -13,17 +13,23 @@
 #pragma once
 
 /**************************\
- *	DEBUG MACROS
-\**************************/
-
-# define ERR_PREFIX	"\033[1m\033[31mError:\033[0m"
-
-/**************************\
  *	EXIT CODES
 \**************************/
 
 # define EXIT_USAGE			64
 # define RUNTIME_FAILURE	1	//	total loss, unknown host
+
+/**************************\
+ *	OPTIONS MACROS
+\**************************/
+
+/*
+	getopt_long returns the option letter for short options, so a long-only
+	option needs an identifier that cannot be mistaken for one: CHAR_MAX + 1
+	is the first value past every character
+*/
+# define OPT_TTL	(CHAR_MAX + 1)
+# define MAX_TTL	255
 
 /**************************\
  *	DEFAULTS

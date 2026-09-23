@@ -57,27 +57,45 @@ static uint16_t	_internet_checksum( const void *data, size_t size )
 	return ((uint16_t)~sum);
 }
 
+static void	_fill_payload( uint8_t *payload, size_t size )
+{
+	struct timeval	now;
+	size_t			i;
+
+	if (size >= sizeof(now))
+	{
+		gettimeofday(&now, NULL);
+		memcpy(payload, &now, sizeof(now));
+		i = sizeof(now);
+		while (i < size)
+		{
+			payload[i] = (i - sizeof(now)) & 0xFF;
+			i++;
+		}
+	}
+	else
+	{
+		i = 0;
+		while (i < size)
+		{
+			payload[i] = i & 0xFF;
+			i++;
+		}
+	}
+}
+
 size_t	build_echo_request( t_ping *p, uint8_t *buf )
 {
 	size_t			icmp_size;
 	struct icmphdr	*icmp_hdr;
-	uint8_t			*payload;
-	size_t			i;
 
 	icmp_size = ICMP_HDR_SIZE + p->opts.size;
 	memset(buf, 0, icmp_size);
 	icmp_hdr = (struct icmphdr *)buf;
-	payload = buf + ICMP_HDR_SIZE;
-	icmp_hdr->type = ICMP_ECHO;	// Echo Request (8)
+	icmp_hdr->type = ICMP_ECHO;
 	icmp_hdr->un.echo.id = htons(p->id);
 	icmp_hdr->un.echo.sequence = htons(p->seq);
-	gettimeofday((struct timeval *)payload, NULL);
-	i = sizeof(struct timeval);
-	while (i < (size_t)p->opts.size)
-	{
-		payload[i] = (i - sizeof(struct timeval)) & 0xFF;
-		i++;
-	}
+	_fill_payload(buf + ICMP_HDR_SIZE, p->opts.size);
 	icmp_hdr->checksum = _internet_checksum(buf, icmp_size);
 	return (icmp_size);
 }

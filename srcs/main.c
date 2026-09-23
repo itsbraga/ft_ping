@@ -24,11 +24,10 @@ int	main( int argc, char **argv )
 	t_ping	p;
 	int		ret;
 
-	if (argc < 2)
-		fprintf(stderr, "%s %s\n", ERR_PREFIX, "Not enough arguments");
 	setvbuf(stdout, NULL, _IOLBF, 0);
 	ping_init(&p, argv);
-	ping_setup(&p, argc, argv);
+	if (ping_setup(&p, argc, argv) != EXIT_SUCCESS)
+		return (RUNTIME_FAILURE);
 	signal(SIGINT, _handle_sigint);
 	ret = ping_run(&p);
 	close(p.sockfd);

@@ -48,6 +48,16 @@ void	display_invalid_value( const char *prog, const char *value,
 	fprintf(stderr, "%s: invalid value (`%s' near `%s')\n", prog, value, near);
 }
 
+void	display_value_too_small( const char *prog, const char *arg )
+{
+	fprintf(stderr, "%s: option value too small: %s\n", prog, arg);
+}
+
+void	display_value_too_big( const char *prog, const char *arg )
+{
+	fprintf(stderr, "%s: option value too big: %s\n", prog, arg);
+}
+
 void	display_help( const char *prog )
 {
 	printf("Usage: %s [OPTION...] HOST ...\n", short_name(prog));
@@ -57,7 +67,6 @@ void	display_help( const char *prog )
 		" Options valid for all request types:\n"
 		"\n"
 		"  -c, --count=NUMBER         stop after sending NUMBER packets\n"
-		"  -n, --numeric              do not resolve host addresses\n"
 		"      --ttl=N                specify N as time-to-live\n"
 		"  -v, --verbose              verbose output\n"
 		"  -w, --timeout=N            stop after N seconds\n"

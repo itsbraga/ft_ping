@@ -34,10 +34,14 @@ void	ping_init( t_ping *p, char **argv )
 
 int	ping_setup( t_ping *p, int argc, char **argv )
 {
-	// p->target = parse_options(&o.opts, argc, argv);
+	p->target = parse_options(&p->opts, argc, argv);
 	if (create_socket(p) != EXIT_SUCCESS)
 		return (RUNTIME_FAILURE);
-	//	Resolution parses answers from the network: done after root is dropped
+	if (apply_socket_options(p) != EXIT_SUCCESS)
+	{
+		close(p->sockfd);
+		return (RUNTIME_FAILURE);
+	}
 	if (resolve_target(p) != EXIT_SUCCESS)
 	{
 		close(p->sockfd);

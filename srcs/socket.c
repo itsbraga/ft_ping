@@ -17,36 +17,30 @@ int	create_socket( t_ping *p )
 	p->sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	if (p->sockfd < 0)
 	{
-		if (errno == EPERM || errno == EACCES)
-		{
-			errno = 0;
-
-			/*
-				At least Linux can allow subprivileged users to send ICMP
-				packets formally encapsulated and built as a datagram socket,
-				but then the identity number is set by the kernel itself
-			*/
-			p->sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP);
-			if (p->sockfd < 0)
-			{
-				if (errno == EPERM || errno == EACCES)
-					err_msg(p->prog_name, "Lacking privilege for icmp socket");
-				else
-				 	err_msg(p->prog_name, strerror(errno));
-				return (RUNTIME_FAILURE);
-			}
-		}
-		else
-		{
-			errno_msg(p->prog_name, "socket");
-			return (RUNTIME_FAILURE);
-		}
+		errno_msg(p->prog_name, "socket");
+		return (RUNTIME_FAILURE);
 	}
 	if (setuid(getuid()) != 0)
 	{
 		errno_msg(p->prog_name, "setuid");
 		close(p->sockfd);
 		return (RUNTIME_FAILURE);
+	}
+	return (EXIT_SUCCESS);
+}
+
+int	apply_socket_options( t_ping *p )
+{
+	int	ttl;
+
+	if (p->opts.ttl)
+	{
+		ttl = (int)p->opts.ttl;
+		if (setsockopt(p->sockfd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1)
+		{
+			errno_msg(p->prog_name, "setsockopt(IP_TTL)");
+			return (RUNTIME_FAILURE);
+		}
 	}
 	return (EXIT_SUCCESS);
 }
