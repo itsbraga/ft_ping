@@ -21,9 +21,6 @@ INET_SHA256="e573d566e55393940099862e7f8994164a0ed12f5a86c3345380842bdc124722"
 TEST_FQDN="ftping.test"
 
 #	RFC 5737 TEST-NET-2, never routed
-#	A local OUTPUT REJECT makes sendto() fail with EPERM: a locally generated
-#	packet has no third party to send an ICMP error to, so the rejection
-#	surfaces as errno, never as a packet
 TEST_DENIED_IP="198.51.100.7"
 
 BUILD_DIR="/tmp/inetutils_build"
@@ -166,5 +163,5 @@ if [ ! -u "$INET_PING" ]; then
 fi
 printf "${PG}✔ Reference validated: %s${NC}\n" "$VERSION_LINE"
 
-printf "\n${BOLD}${PINK}===========  ENVIRONMENT READY  ==========${NC}\n\n"
+printf "\n${BOLD}${PINK}===========  ENVIRONMENT ${BLINK}READY${NC}${BOLD}${PINK}  ==========${NC}\n\n"
 printf "${PY}Reference:${NC} %s\n" "$INET_PING"

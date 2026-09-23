@@ -5,6 +5,7 @@ export NC="\033[0m"
 export BOLD="\033[1m"
 export ITAL="\033[3m"
 export UL="\033[4m"
+export BLINK="\033[5m"
 
 export GRAY="\033[90m"
 export RED="\033[31m"

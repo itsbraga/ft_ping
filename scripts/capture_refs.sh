@@ -107,16 +107,30 @@ capture fqdn_public	-c2 google.com
 #	FAILURE BRANCHES
 #————————————————————————————————————————————————————————
 
-#	Silent target: RFC 5737 documentation range, never routed
-capture silent			-c2 192.0.2.1
+#	Silent target: 192.0.2.0/24 is TEST-NET-1 (RFC 5737 §3), reserved for
+#	documentation — no router forwards it, so packets are silently dropped
+capture silent		-c2 192.0.2.1
 
-#	ICMP type 11: the NAT gateway replies Time to live exceeded
-#	Expires at the first hop, so the packet never leaves the VM
+#	ICMP type 11 code 0 "Time Exceeded" (RFC 792 §3.3.3):
+#	a router MUST discard a datagram whose TTL reaches zero and SHOULD
+#	send a Time Exceeded message back to the source.
+#	--ttl 1 forces expiry at the first hop (the NAT gateway), so the
+#	packet never leaves the VM and a reply always comes back
 capture ttl_exceeded	-c2 --ttl 1 8.8.8.8
 
-#	OUTPUT REJECT on a locally generated packet surfaces as EPERM from
-#	sendto(), never as an ICMP packet: exercises the send failure branch
+#	ICMP type 3 "Destination Unreachable" (RFC 792 §3.3.1):
+#	16 sub-codes (RFC 792 + RFC 1812 §5.2.7.1). Triggering one requires
+#	a router to actually send an error back, which is not achievable in
+#	a simple NAT VM without network namespaces or iptables REJECT on a
+#	FORWARD chain. The display strings come straight from the RFCs and
+#	share the same output format as type 11 (verified above)
+
+#	198.51.100.0/24 is TEST-NET-2 (RFC 5737 §3). setup.sh adds an
+#	iptables OUTPUT REJECT rule for this address: since the rejection
+#	happens locally (not at a remote router), it surfaces as EPERM from
+#	sendto() — no ICMP error packet is generated.
+#	Exercises the send-failure branch of _send_echo_request()
 capture send_denied		-c2 198.51.100.7
 
-printf "\n${BOLD}${PINK}=============  CORPUS READY  =============${NC}\n\n"
+printf "\n${BOLD}${PINK}=============  CORPUS ${BLINK}READY${NC}${BOLD}${PINK}  =============${NC}\n\n"
 printf "${PY}Location:${NC} %s\n" "$REFS_DIR"
