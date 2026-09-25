@@ -22,7 +22,7 @@ void	err_msg( const char *prog, const char *detail )
 	fprintf(stderr, "%s: %s\n", prog, detail);
 }
 
-const char	*short_name( const char *prog )
+const char	*prog_basename( const char *prog )
 {
 	const char	*slash;
 

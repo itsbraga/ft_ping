@@ -52,33 +52,33 @@ static void	_reject_option( const char *prog, int opt, char **argv )
 	exit(EXIT_USAGE);
 }
 
-static void	_apply_option( t_options *o, int opt, char **argv )
+static void	_apply_option( const char *prog, t_options *o, int opt, char **argv )
 {
 	switch (opt)
 	{
 		case '?':
-			display_help(argv[0]);
+			display_help(prog);
 			exit(EXIT_SUCCESS);
 		case 'v':
 			o->verbose = true;
 			break;
 		case 'c':
-			o->count = _parse_number(argv[0], optarg, 0, true);
+			o->count = _parse_number(prog, optarg, 0, true);
 			break;
 		case 's':
-			o->size = _parse_number(argv[0], optarg, MAX_PAYLOAD_SIZE, true);
+			o->size = _parse_number(prog, optarg, MAX_PAYLOAD_SIZE, true);
 			break;
 		case 'w':
-			o->timeout = _parse_number(argv[0], optarg, INT_MAX, false);
+			o->timeout = _parse_number(prog, optarg, INT_MAX, false);
 			break;
 		case 'W':
-			o->linger = _parse_number(argv[0], optarg, INT_MAX, false);
+			o->linger = _parse_number(prog, optarg, INT_MAX, false);
 			break;
 		case OPT_TTL:
-			o->ttl = _parse_number(argv[0], optarg, MAX_TTL, false);
+			o->ttl = _parse_number(prog, optarg, MAX_TTL, false);
 			break;
 		default:
-			_reject_option(argv[0], opt, argv);
+			_reject_option(prog, opt, argv);
 	}
 }
 
@@ -86,17 +86,17 @@ static void	_apply_option( t_options *o, int opt, char **argv )
 	GNU getopt moves operands after the options, so the host is always
 	at optind, wherever it was typed on the command line
 */
-static char	*_host_operand( int argc, char **argv )
+static char	*_host_operand( const char *prog, int argc, char **argv )
 {
 	if (optind >= argc)
 	{
-		display_missing_host(argv[0]);
+		display_missing_host(prog);
 		exit(EXIT_USAGE);
 	}
 	return (argv[optind]);
 }
 
-char	*parse_options( t_options *o, int argc, char **argv )
+char	*parse_options( const char *prog, t_options *o, int argc, char **argv )
 {
 	static const struct option	long_opts[] = {
 		{"help", no_argument, NULL, '?'},
@@ -112,6 +112,6 @@ char	*parse_options( t_options *o, int argc, char **argv )
 
 	opterr = 0;
 	while ((opt = getopt_long(argc, argv, ":?vc:s:w:W:", long_opts, NULL)) != -1)
-		_apply_option(o, opt, argv);
-	return (_host_operand(argc, argv));
+		_apply_option(prog, o, opt, argv);
+	return (_host_operand(prog, argc, argv));
 }

@@ -27,7 +27,7 @@ static void	_set_default_stats( t_stats *s )
 void	ping_init( t_ping *p, char **argv )
 {
 	memset(p, 0, sizeof(t_ping));
-	p->prog_name = argv[0];
+	p->prog_name = prog_basename(argv[0]);
 	p->id = getpid() & 0xFFFF;
 	_set_default_options(&p->opts);
 	_set_default_stats(&p->stats);
@@ -35,7 +35,7 @@ void	ping_init( t_ping *p, char **argv )
 
 int	ping_setup( t_ping *p, int argc, char **argv )
 {
-	p->target = parse_options(&p->opts, argc, argv);
+	p->target = parse_options(p->prog_name, &p->opts, argc, argv);
 	if (create_socket(p) != EXIT_SUCCESS)
 		return (RUNTIME_FAILURE);
 	if (apply_socket_options(p) != EXIT_SUCCESS)

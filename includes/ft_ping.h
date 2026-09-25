@@ -104,14 +104,14 @@ extern volatile sig_atomic_t	g_stop;
 //	srcs/tools/helpers.c
 void		errno_msg( const char *prog, const char *context );
 void		err_msg( const char *prog, const char *detail );
-const char	*short_name( const char *prog );
+const char	*prog_basename( const char *prog );
 
 // srcs/init.c
 void		ping_init( t_ping *p, char **argv );
 int			ping_setup( t_ping *p, int argc, char **argv );
 
 //	srcs/args.c
-char		*parse_options( t_options *o, int argc, char **argv );
+char		*parse_options( const char *prog, t_options *o, int argc, char **argv );
 
 //	srcs/packet.c
 size_t		build_echo_request( t_ping *p, uint8_t *buf );

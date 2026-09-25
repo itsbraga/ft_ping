@@ -15,12 +15,12 @@
 static void	_display_try_help( const char *prog )
 {
 	fprintf(stderr, "Try '%s --help' or '%s --usage' for more information.\n",
-		short_name(prog), short_name(prog));
+		prog, prog);
 }
 
 void	display_missing_host( const char *prog )
 {
-	fprintf(stderr, "%s: missing host operand\n", short_name(prog));
+	fprintf(stderr, "%s: missing host operand\n", prog);
 	_display_try_help(prog);
 }
 
@@ -105,7 +105,7 @@ void	display_icmp_error( const struct sockaddr_in *from, size_t icmp_size,
 
 void	display_help( const char *prog )
 {
-	printf("Usage: %s [OPTION...] HOST ...\n", short_name(prog));
+	printf("Usage: %s [OPTION...] HOST\n", prog);
 	fputs(
 		"Send ICMP ECHO_REQUEST packets to network hosts.\n"
 		"\n"

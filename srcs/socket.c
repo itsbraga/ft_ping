@@ -59,7 +59,7 @@ int	resolve_target( t_ping *p )
 	hints.ai_flags = AI_CANONNAME;
 	if (getaddrinfo(p->target, NULL, &hints, &res) != 0)
 	{
-		fprintf(stderr, "%s: unknown host %s\n", short_name(p->prog_name), p->target);
+		fprintf(stderr, "%s: unknown host %s\n", p->prog_name, p->target);
 		return (RUNTIME_FAILURE);
 	}
 	memcpy(&p->dest, res->ai_addr, sizeof(p->dest));
