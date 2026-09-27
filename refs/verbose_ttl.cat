@@ -1,0 +1,9 @@
+PING 8.8.8.8 (8.8.8.8): 56 data bytes, id 0x3033 = 12339$
+36 bytes from 10.0.2.2: Time to live exceeded$
+IP Hdr Dump:$
+ 4500 0054 4671 4000 0101 171a 0a00 020f 0808 0808 $
+Vr HL TOS  Len   ID Flg  off TTL Pro  cks      Src^IDst^IData$
+ 4  5  00 0054 4671   2 0000  01  01 171a 10.0.2.15  8.8.8.8 $
+ICMP: type 8, code 0, size 64, id 0x3033, seq 0x0000$
+--- 8.8.8.8 ping statistics ---$
+1 packets transmitted, 0 packets received, 100% packet loss$

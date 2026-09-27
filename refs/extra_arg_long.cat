@@ -1,0 +1,2 @@
+/opt/inetutils/bin/ping: option '--verbose' doesn't allow an argument$
+Try 'ping --help' or 'ping --usage' for more information.$

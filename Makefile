@@ -111,7 +111,11 @@ re:	fclean
 		@$(MAKE) --no-print-directory all
 		@printf "$(BOLD)$(P_YELLOW)./ft_ping -$(NC) Project successfully rebuilt! ✨\n"
 
+setuid:	$(NAME)
+		sudo chown root:root $(NAME)
+		sudo chmod u+s $(NAME)
+
 debug: fclean
 		@$(MAKE) --no-print-directory all CFLAGS="$(CFLAGS) $(DEBUG)"
 
-.PHONY: all clean fclean re debug
+.PHONY: all clean fclean re setuid debug

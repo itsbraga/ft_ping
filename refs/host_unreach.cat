@@ -1,0 +1,5 @@
+PING 10.0.2.99 (10.0.2.99): 56 data bytes$
+92 bytes from 10.0.2.15: Destination Host Unreachable$
+92 bytes from 10.0.2.15: Destination Host Unreachable$
+--- 10.0.2.99 ping statistics ---$
+2 packets transmitted, 0 packets received, 100% packet loss$
