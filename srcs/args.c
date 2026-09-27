@@ -3,82 +3,95 @@
 /*                                                        :::      ::::::::   */
 /*   args.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: panther <panther@student.42.fr>            +#+  +:+       +#+        */
+/*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/22 02:39:08 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/22 23:17:12 by panther          ###   ########.fr       */
+/*   Updated: 2026/09/27 23:21:17 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
 
-static size_t	_parse_number( const char *prog, const char *arg, size_t max,
-					bool allow_zero )
+static size_t	_parse_number( const char *value, size_t max, bool allow_zero )
 {
 	char			*endptr;
 	unsigned long	n;
 
-	if (arg[0] == '-')
-		display_invalid_value(prog, arg, arg);
+	n = strtoul(value, &endptr, 0);
+	if (*endptr != '\0')
+		display_invalid_value(value, endptr);
+	else if (n == 0 && !allow_zero)
+		display_value_too_small(value);
+	else if (max != 0 && n > max)
+		display_value_too_big(value);
 	else
+		return (n);
+	exit(RUNTIME_FAILURE);
+}
+
+static const char	*_long_name( const struct option *long_opts, int val )
+{
+	while (long_opts->name)
 	{
-		errno = 0;
-		n = strtoul(arg, &endptr, 10);
-		if (*endptr != '\0' || endptr == arg)
-			display_invalid_value(prog, arg, endptr);
-		else if (errno == ERANGE || (max != 0 && n > max))
-			display_value_too_big(prog, arg);
-		else if (n == 0 && !allow_zero)
-			display_value_too_small(prog, arg);
-		else
-			return (n);
+		if (long_opts->val == val)
+			return (long_opts->name);
+		long_opts++;
 	}
-	exit(EXIT_USAGE);
+	return (NULL);
 }
 
 /*
 	The return value tells which kind of error, optopt which option caused
-	it: a short one is reported by its letter, a long one leaves optopt at
-	zero and is read back from the command line instead
+	it. A long option is reported by its full name, looked up by value:
+	optopt holds the value, and the user may have typed an abbreviation
 */
-static void	_reject_option( const char *prog, int opt, char **argv )
+static void	_reject_option( char **argv, int opt, const struct option *long_opts )
 {
-	if (opt == ':')
-		display_missing_argument(prog, optopt);
-	else if (optopt)
-		display_invalid_option(prog, optopt);
+	const char	*arg;
+	const char	*name;
+
+	arg = argv[optind - 1];
+	name = _long_name(long_opts, optopt);
+	if (opt == ':' && strncmp(arg, "--", 2) == 0)
+		display_long_missing_argument(name);
+	else if (opt == ':')
+		display_missing_argument(optopt);
+	else if (optopt == 0)
+		display_unrecognized_option(arg);
+	else if (name)
+		display_long_extra_argument(name);
 	else
-		display_unrecognized_option(prog, argv[optind - 1]);
+		display_invalid_option(optopt);
 	exit(EXIT_USAGE);
 }
 
-static void	_apply_option( const char *prog, t_options *o, int opt, char **argv )
+static void	_apply_option( t_options *o, int opt, const struct option *long_opts, char **argv )
 {
 	switch (opt)
 	{
 		case '?':
-			display_help(prog);
+			display_help();
 			exit(EXIT_SUCCESS);
 		case 'v':
 			o->verbose = true;
 			break;
 		case 'c':
-			o->count = _parse_number(prog, optarg, 0, true);
+			o->count = _parse_number(optarg, 0, true);
 			break;
 		case 's':
-			o->size = _parse_number(prog, optarg, MAX_PAYLOAD_SIZE, true);
+			o->size = _parse_number(optarg, MAX_PAYLOAD_SIZE, true);
 			break;
 		case 'w':
-			o->timeout = _parse_number(prog, optarg, INT_MAX, false);
+			o->timeout = _parse_number(optarg, INT_MAX, false);
 			break;
 		case 'W':
-			o->linger = _parse_number(prog, optarg, INT_MAX, false);
+			o->linger = _parse_number(optarg, INT_MAX, false);
 			break;
 		case OPT_TTL:
-			o->ttl = _parse_number(prog, optarg, MAX_TTL, false);
+			o->ttl = _parse_number(optarg, MAX_TTL, false);
 			break;
 		default:
-			_reject_option(prog, opt, argv);
+			_reject_option(argv, opt, long_opts);
 	}
 }
 
@@ -86,20 +99,21 @@ static void	_apply_option( const char *prog, t_options *o, int opt, char **argv 
 	GNU getopt moves operands after the options, so the host is always
 	at optind, wherever it was typed on the command line
 */
-static char	*_host_operand( const char *prog, int argc, char **argv )
+static char	*_host_operand( int argc, char **argv )
 {
 	if (optind >= argc)
 	{
-		display_missing_host(prog);
+		display_missing_host();
 		exit(EXIT_USAGE);
 	}
 	return (argv[optind]);
 }
 
-char	*parse_options( const char *prog, t_options *o, int argc, char **argv )
+char	*parse_options( t_options *o, int argc, char **argv )
 {
 	static const struct option	long_opts[] = {
 		{"help", no_argument, NULL, '?'},
+		{"usage", no_argument, NULL, OPT_USAGE},
 		{"verbose", no_argument, NULL, 'v'},
 		{"count", required_argument, NULL, 'c'},
 		{"size", required_argument, NULL, 's'},
@@ -108,10 +122,10 @@ char	*parse_options( const char *prog, t_options *o, int argc, char **argv )
 		{"linger", required_argument, NULL, 'W'},
 		{NULL, 0, NULL, 0}
 	};
-	int							opt;
+	int	opt;
 
 	opterr = 0;
 	while ((opt = getopt_long(argc, argv, ":?vc:s:w:W:", long_opts, NULL)) != -1)
-		_apply_option(prog, o, opt, argv);
-	return (_host_operand(prog, argc, argv));
+		_apply_option(o, opt, long_opts, argv);
+	return (_host_operand(argc, argv));
 }

@@ -22,7 +22,7 @@ NAME		:=	ft_ping
 INC			:=	-I includes/
 
 CC			:=	cc
-CFLAGS		:=	-Wall -Wextra -Werror
+CFLAGS		:=	-Wall -Wextra -Werror -D_GNU_SOURCE
 DEPFLAGS	:=	-MMD -MP
 LDFLAGS		:=	-lm
 DEBUG		:=	-g3

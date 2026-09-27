@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/15 19:00:43 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/22 17:56:47 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/27 23:09:16 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,17 @@
  *	ENUM
 \**************************/
 
+/*
+	getopt_long returns the option letter for short options, so a long-only
+	option needs an identifier that cannot be mistaken for one: CHAR_MAX + 1
+	is the first value past every character
+*/
+typedef enum e_long_only
+{
+	OPT_TTL = CHAR_MAX + 1,
+	OPT_USAGE
+}	t_long_only;
+
 //	What the loop does after handling a timer expiry or a datagram
 typedef enum e_step
 {
@@ -79,7 +90,6 @@ typedef struct s_stats
 
 typedef struct s_ping
 {
-	const char			*prog_name;
 	t_options			opts;
 	char				*target;
 	char				hostname[NI_MAXHOST];			//	canonical name, as printed
@@ -101,26 +111,27 @@ extern volatile sig_atomic_t	g_stop;
  *	PROTOTYPES
 \**************************/
 
-//	srcs/tools/helpers.c
-void		errno_msg( const char *prog, const char *context );
-void		err_msg( const char *prog, const char *detail );
-const char	*prog_basename( const char *prog );
+//	srcs/tools.c
+void		errno_msg( const char *context );
+void		err_msg( const char *detail );
+const char	*unreach_str( uint8_t code );
 
 // srcs/init.c
-void		ping_init( t_ping *p, char **argv );
+void		ping_init( t_ping *p );
 int			ping_setup( t_ping *p, int argc, char **argv );
 
 //	srcs/args.c
-char		*parse_options( const char *prog, t_options *o, int argc, char **argv );
+char		*parse_options( t_options *o, int argc, char **argv );
 
 //	srcs/packet.c
 size_t		build_echo_request( t_ping *p, uint8_t *buf );
 
 //	srcs/socket.c
 int			create_socket( t_ping *p );
-int			apply_socket_options( t_ping *p );
+void		apply_socket_options( t_ping *p );
 int			resolve_target( t_ping *p );
-ssize_t		recv_packet( t_ping *p, uint8_t *buf, size_t buf_size, struct sockaddr_in *from );
+ssize_t		recv_packet( t_ping *p, uint8_t *buf, size_t buf_size,
+				struct sockaddr_in *from );
 
 //	srcs/stats.c
 double		compute_rtt( const struct timeval *sent_at );
@@ -128,19 +139,21 @@ void		stats_update( t_stats *s, double rtt );
 double		stats_stddev( const t_stats *s );
 
 //	srcs/display.c
-void		display_missing_host( const char *prog );
-void		display_invalid_option( const char *prog, int opt );
-void		display_unrecognized_option( const char *prog, const char *arg );
-void		display_missing_argument( const char *prog, int opt );
-void		display_invalid_value( const char *prog, const char *value, const char *near );
-void		display_value_too_small( const char *prog, const char *arg );
-void		display_value_too_big( const char *prog, const char *arg );
+void		display_missing_host( void );
+void		display_invalid_option( int arg );
+void		display_unrecognized_option( const char *name );
+void		display_missing_argument( int arg );
+void		display_long_missing_argument( const char *name );
+void		display_long_extra_argument( const char *name );
+void		display_invalid_value( const char *value, const char *near );
+void		display_value_too_small( const char *value );
+void		display_value_too_big( const char *value );
 void		display_icmp_error( const struct sockaddr_in *from, size_t icmp_size,
 				uint8_t type, uint8_t code );
-void		display_help( const char *prog );
+void		display_help( void );
 void		display_target_info( t_ping *p );
-void		display_reply( const struct sockaddr_in *from, size_t icmp_size, uint16_t seq,
-				uint8_t ttl, const double *rtt );
+void		display_reply( const struct sockaddr_in *from, size_t icmp_size,
+				uint16_t seq, uint8_t ttl, const double *rtt );
 void		display_stats( const char *host, const t_stats *s, size_t payload_size );
 
 //	srcs/ping.c

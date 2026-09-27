@@ -6,11 +6,13 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/15 19:17:10 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/22 17:55:43 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/27 22:08:56 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #pragma once
+
+# define PROG_NAME	program_invocation_short_name
 
 /**************************\
  *	EXIT CODES
@@ -23,19 +25,12 @@
  *	OPTIONS MACROS
 \**************************/
 
-/*
-	getopt_long returns the option letter for short options, so a long-only
-	option needs an identifier that cannot be mistaken for one: CHAR_MAX + 1
-	is the first value past every character
-*/
-# define OPT_TTL	(CHAR_MAX + 1)
 # define MAX_TTL	255
 
 /**************************\
  *	DEFAULTS
 \**************************/
 
-# define DEFAULT_TTL			64
 # define DEFAULT_INTERVAL_MS	1000	//	milliseconds between two Echo Requests
 # define DEFAULT_LINGER			10		//	seconds to wait for late replies once -c is reached
 
@@ -56,11 +51,9 @@
 
 # define ICMP_HDR_SIZE			8
 # define DEFAULT_PAYLOAD_SIZE	56
-# define MAX_PAYLOAD_SIZE		65507	//	maximum user data size allowed inside an ICMP Echo Request
-										//	packet over IPv4
+# define MAX_PAYLOAD_SIZE		65399	//	65535 - 60 (largest IP header) - 76 (largest ICMP header)
 # define MAX_DATAGRAM_SIZE		65535	//	maximum total length of an IPv4 datagram
-										//	(65507 + 20 (IP header) + 8 (ICMP header))
-										//	(2^16 - 1)
+										//	(2^16 - 1) --> 65507 + 20 (IP header) + 8 (ICMP header)
 
 /*
 	(uint8_t *)(buf)	reinterprets the ptr as a byte ptr, necessary because buf could 
