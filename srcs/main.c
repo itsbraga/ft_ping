@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/15 18:13:06 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/22 17:56:18 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/27 23:09:06 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ int	main( int argc, char **argv )
 	int		ret;
 
 	setvbuf(stdout, NULL, _IOLBF, 0);
-	ping_init(&p, argv);
+	ping_init(&p);
 	if (ping_setup(&p, argc, argv) != EXIT_SUCCESS)
 		return (RUNTIME_FAILURE);
 	_setup_signals();

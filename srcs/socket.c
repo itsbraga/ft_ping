@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   socket.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: panther <panther@student.42.fr>            +#+  +:+       +#+        */
+/*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/31 15:13:20 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/24 00:40:59 by panther          ###   ########.fr       */
+/*   Updated: 2026/09/27 22:46:32 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,32 +17,25 @@ int	create_socket( t_ping *p )
 	p->sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	if (p->sockfd < 0)
 	{
-		errno_msg(p->prog_name, "socket");
+		errno_msg("socket");
 		return (RUNTIME_FAILURE);
 	}
 	if (setuid(getuid()) != 0)
 	{
-		errno_msg(p->prog_name, "setuid");
+		errno_msg("setuid");
 		close(p->sockfd);
 		return (RUNTIME_FAILURE);
 	}
 	return (EXIT_SUCCESS);
 }
 
-int	apply_socket_options( t_ping *p )
+void	apply_socket_options( t_ping *p )
 {
 	int	ttl;
 
-	if (p->opts.ttl)
-	{
-		ttl = (int)p->opts.ttl;
-		if (setsockopt(p->sockfd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1)
-		{
-			errno_msg(p->prog_name, "setsockopt(IP_TTL)");
-			return (RUNTIME_FAILURE);
-		}
-	}
-	return (EXIT_SUCCESS);
+	ttl = (int)p->opts.ttl;
+	if (ttl > 0 && setsockopt(p->sockfd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1)
+		errno_msg("setsockopt(IP_TTL)");
 }
 
 /*
@@ -59,13 +52,12 @@ int	resolve_target( t_ping *p )
 	hints.ai_flags = AI_CANONNAME;
 	if (getaddrinfo(p->target, NULL, &hints, &res) != 0)
 	{
-		fprintf(stderr, "%s: unknown host %s\n", p->prog_name, p->target);
+		err_msg("unknown host");
 		return (RUNTIME_FAILURE);
 	}
 	memcpy(&p->dest, res->ai_addr, sizeof(p->dest));
 	snprintf(p->hostname, sizeof(p->hostname), "%s",
 		res->ai_canonname ? res->ai_canonname : p->target);
-
 	freeaddrinfo(res);
 	inet_ntop(AF_INET, &p->dest.sin_addr, p->target_ip_str, sizeof(p->target_ip_str));
 	return (EXIT_SUCCESS);
@@ -80,6 +72,6 @@ ssize_t	recv_packet( t_ping *p, uint8_t *buf, size_t buf_size, struct sockaddr_i
 	size = recvfrom(p->sockfd, buf, buf_size, MSG_DONTWAIT,
 						(struct sockaddr *)from, &from_len);
 	if (size == -1 && errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
-		errno_msg(p->prog_name, "recvfrom");
+		errno_msg("recvfrom");
 	return (size);
 }

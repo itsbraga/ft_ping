@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/11 17:33:03 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/25 17:43:47 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/09/27 22:31:12 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,7 +28,7 @@ static int	_send_echo_request( t_ping *p )
 	if (sendto(p->sockfd, buf, icmp_size, 0,
 					(struct sockaddr *)&p->dest, sizeof(p->dest)) == -1)
 	{
-		errno_msg(p->prog_name, "sending packet");
+		errno_msg("sending packet");
 		return (RUNTIME_FAILURE);
 	}
 	p->stats.transmitted++;
@@ -211,19 +211,23 @@ static t_step	_handle_next_event( t_ping *p, long long *next_action_ms,
 {
 	struct pollfd	pfd;
 	int				ready;
+	t_step			step;
 
 	pfd = (struct pollfd){.fd = p->sockfd, .events = POLLIN};
 	ready = poll(&pfd, 1, _poll_timeout(*next_action_ms, deadline_ms));
 	if (ready > 0)
 		return (_handle_reply(p));
-	if (p->opts.timeout && _now_ms() >= deadline_ms)
+	if (ready < 0)
+	{
+		if (errno == EINTR)
+			return (STEP_CONTINUE);
+		errno_msg("poll");
+		return (STEP_FAILED);
+	}
+	step = _do_next_action(p, next_action_ms);
+	if (step == STEP_CONTINUE && p->opts.timeout && _now_ms() >= deadline_ms)
 		return (STEP_DONE);
-	if (ready == 0)
-		return (_do_next_action(p, next_action_ms));
-	if (errno == EINTR)
-		return (STEP_CONTINUE);
-	errno_msg(p->prog_name, "poll");
-	return (STEP_FAILED);
+	return (step);
 }
 
 static int	_ping_loop( t_ping *p )
