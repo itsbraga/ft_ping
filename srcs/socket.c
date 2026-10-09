@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/31 15:13:20 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/27 22:46:32 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/10/09 20:07:02 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,9 +69,8 @@ ssize_t	recv_packet( t_ping *p, uint8_t *buf, size_t buf_size, struct sockaddr_i
 	ssize_t		size;
 
 	from_len = sizeof(*from);
+	//	A failed read is skipped silently, as in the reference
 	size = recvfrom(p->sockfd, buf, buf_size, MSG_DONTWAIT,
 						(struct sockaddr *)from, &from_len);
-	if (size == -1 && errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
-		errno_msg("recvfrom");
 	return (size);
 }

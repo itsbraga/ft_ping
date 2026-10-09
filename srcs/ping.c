@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/11 17:33:03 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/27 22:31:12 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/10/12 00:22:53 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,8 +25,8 @@ static int	_send_echo_request( t_ping *p )
 	size_t	icmp_size;
 
 	icmp_size = build_echo_request(p, buf);
-	if (sendto(p->sockfd, buf, icmp_size, 0,
-					(struct sockaddr *)&p->dest, sizeof(p->dest)) == -1)
+	if (sendto(p->sockfd, buf, icmp_size, 0, (struct sockaddr *)&p->dest,
+				sizeof(p->dest)) == -1)
 	{
 		errno_msg("sending packet");
 		return (RUNTIME_FAILURE);
@@ -42,9 +42,43 @@ static bool	_all_sent( const t_ping *p )
 	return (p->opts.count && p->stats.transmitted >= p->opts.count);
 }
 
-static bool	_all_received( const t_ping *p )
+//	Every request got an answer, an Echo Reply or an ICMP error alike
+static bool	_all_answered( const t_ping *p )
 {
-	return (p->opts.count && p->stats.received >= p->opts.count);
+	return (p->opts.count && p->stats.answered >= p->opts.count);
+}
+
+/*
+	Validates a received datagram and splits it into its headers.
+	Every length is checked before the byte it guards is read: the
+	buffer comes from the network and nothing in it can be trusted.
+	A failed read (size == -1) is rejected by the first test
+*/
+static bool	_parse_packet( const uint8_t *buf, ssize_t size, t_packet *pkt )
+{
+	size_t	ip_hdr_size;
+
+	if (size < (ssize_t)sizeof(struct ip))
+		return (false);
+	ip_hdr_size = IP_HDR_SIZE(buf);
+	if (ip_hdr_size < sizeof(struct ip) || (size_t)size < ip_hdr_size + ICMP_HDR_SIZE)
+		return (false);
+	pkt->ip = (const struct ip *)buf;
+	pkt->icmp = (const struct icmphdr *)(buf + ip_hdr_size);
+	pkt->icmp_size = (size_t)size - ip_hdr_size;
+	return (true);
+}
+
+static bool	_is_our_reply( const t_ping *p, const t_packet *pkt )
+{
+	return (pkt->icmp->type == ICMP_ECHOREPLY && ntohs(pkt->icmp->un.echo.id) == p->id);
+}
+
+static bool	_is_handled_error( const struct icmphdr *icmp )
+{
+	if (icmp->type == ICMP_DEST_UNREACH)
+		return (true);
+	return (icmp->type == ICMP_TIME_EXCEEDED && icmp->code == ICMP_EXC_TTL);
 }
 
 /*
@@ -53,40 +87,25 @@ static bool	_all_received( const t_ping *p )
 	the original IP header followed by the first 8 bytes of the original
 	ICMP datagram, which is enough to read type and id
 */
-static bool	_is_our_error( const struct icmphdr *err, size_t icmp_size,
-				uint16_t our_id )
+static bool	_is_our_error( const t_ping *p, const t_packet *pkt )
 {
-	const uint8_t			*inner_ip;
-	size_t					ihl;
+	const struct ip			*quoted;
 	const struct icmphdr	*orig;
+	size_t					ihl;
 
-	if (err->type != ICMP_DEST_UNREACH && err->type != ICMP_TIME_EXCEEDED)
+	if (!_is_handled_error(pkt->icmp))
 		return (false);
-	if (icmp_size < ICMP_HDR_SIZE + sizeof(struct ip))
+	if (pkt->icmp_size < ICMP_HDR_SIZE + sizeof(struct ip))
 		return (false);
-	inner_ip = (const uint8_t *)err + ICMP_HDR_SIZE;
-	ihl = IP_HDR_SIZE(inner_ip);
-	if (icmp_size < ICMP_HDR_SIZE + ihl + ICMP_HDR_SIZE)
+	quoted = (const struct ip *)((const uint8_t *)pkt->icmp + ICMP_HDR_SIZE);
+	ihl = IP_HDR_SIZE(quoted);
+	//	error header + quoted IP header + quoted Echo Request header
+	if (ihl < sizeof(struct ip) || pkt->icmp_size < ICMP_HDR_SIZE + ihl + ICMP_HDR_SIZE)
 		return (false);
-	orig = (const struct icmphdr *)(inner_ip + ihl);
-	return (orig->type == ICMP_ECHO && ntohs(orig->un.echo.id) == our_id);
-}
-
-/*
-	Returns the ICMP header of a well-formed datagram, NULL otherwise.
-	Every length is checked before the byte it guards is read: the
-	buffer comes from the network and nothing in it can be trusted
-*/
-static const struct icmphdr	*_icmp_header( const uint8_t *buf, ssize_t size )
-{
-	size_t	ip_hdr_size;
-
-	if (size < (ssize_t)sizeof(struct ip))
-		return (NULL);
-	ip_hdr_size = IP_HDR_SIZE(buf);
-	if (ip_hdr_size < sizeof(struct ip) || (size_t)size < ip_hdr_size + ICMP_HDR_SIZE)
-		return (NULL);
-	return ((const struct icmphdr *)(buf + ip_hdr_size));
+	if (quoted->ip_p != IPPROTO_ICMP || quoted->ip_dst.s_addr != p->dest.sin_addr.s_addr)
+		return (false);
+	orig = (const struct icmphdr *)((const uint8_t *)quoted + ihl);
+	return (orig->type == ICMP_ECHO && ntohs(orig->un.echo.id) == p->id);
 }
 
 /*
@@ -94,59 +113,50 @@ static const struct icmphdr	*_icmp_header( const uint8_t *buf, ssize_t size )
 	records it, and prints the reply line. The timestamp is copied out
 	rather than cast in place: its offset gives no alignment guarantee
 */
-static void	_report_reply( t_ping *p, const uint8_t *buf, size_t icmp_size,
-				const struct sockaddr_in *from )
+static void	_report_reply( t_ping *p, const t_packet *pkt )
 {
-	const struct icmphdr	*icmp_hdr;
-	struct timeval			sent_at;
-	double					rtt;
-	const double			*shown_rtt;
-	uint16_t				curr_seq;
+	struct timeval	sent_at;
+	double			rtt;
+	const double	*shown_rtt;
 
-	icmp_hdr = (const struct icmphdr *)(buf + IP_HDR_SIZE(buf));
 	shown_rtt = NULL;
-	if (icmp_size >= ICMP_HDR_SIZE + sizeof(sent_at))
+	if (pkt->icmp_size >= ICMP_HDR_SIZE + sizeof(sent_at))
 	{
-		memcpy(&sent_at, (const uint8_t *)icmp_hdr + ICMP_HDR_SIZE, sizeof(sent_at));
+		memcpy(&sent_at, (const uint8_t *)pkt->icmp + ICMP_HDR_SIZE, sizeof(sent_at));
 		rtt = compute_rtt(&sent_at);
 		stats_update(&p->stats, rtt);
 		shown_rtt = &rtt;
 	}
-	curr_seq = ntohs(icmp_hdr->un.echo.sequence);
-	display_reply(from, icmp_size, curr_seq, ((const struct ip *)buf)->ip_ttl, shown_rtt);
+	display_reply(pkt, shown_rtt);
 }
 
 /*
 	Consumes exactly one datagram, which poll() reported as ready.
 	A raw ICMP socket receives every ICMP datagram the host gets, so
-	anything that is not a well-formed Echo Reply carrying our id is
-	dropped. The run ends as soon as every expected reply is in
+	anything that is neither our Echo Reply nor an error about one of
+	out requests is dropped. Both count as an answer for -c
 */
 static t_step	_handle_reply( t_ping *p )
 {
-	uint8_t					buf[MAX_DATAGRAM_SIZE + 1];
-	struct sockaddr_in		from;
-	ssize_t					size;
-	const struct icmphdr	*icmp_hdr;
-	size_t					icmp_size;
+	uint8_t		buf[MAX_DATAGRAM_SIZE + 1];
+	t_packet	pkt;
+	ssize_t		size;
 
-	size = recv_packet(p, buf, sizeof(buf), &from);
-	if (size < 0)
+	size = recv_packet(p, buf, sizeof(buf), &pkt.from);
+	if (!_parse_packet(buf, size, &pkt))
 		return (STEP_CONTINUE);
-	icmp_hdr = _icmp_header(buf, size);
-	if (!icmp_hdr)
-		return (STEP_CONTINUE);
-	icmp_size = (size_t)size - IP_HDR_SIZE(buf);
-	if (icmp_hdr->type == ICMP_ECHOREPLY && ntohs(icmp_hdr->un.echo.id) == p->id)
+	if (_is_our_reply(p, &pkt))
 	{
 		p->stats.received++;
-		_report_reply(p, buf, icmp_size, &from);
-		if (_all_received(p))
-			return (STEP_DONE);
-		return (STEP_CONTINUE);
+		_report_reply(p, &pkt);
 	}
-	if (_is_our_error(icmp_hdr, icmp_size, p->id))
-		display_icmp_error(&from, icmp_size, icmp_hdr->type, icmp_hdr->code);
+	else if (_is_our_error(p, &pkt))
+		display_icmp_error(&pkt, p->opts.verbose);
+	else
+		return (STEP_CONTINUE);
+	p->stats.answered++;
+	if (_all_answered(p))
+			return (STEP_DONE);
 	return (STEP_CONTINUE);
 }
 
@@ -193,19 +203,10 @@ static t_step	_do_next_action( t_ping *p, long long *next_action_ms )
 }
 
 /*
-	Returns the earliest of the two deadlines so poll() never oversleeps.
-	When -w is not set, deadline_ms is ignored (set to LLONG_MAX)
+	Waits for whichever comes first, a datagram or the next scheduled
+	action, and handles it. -w is checked after each event, never waited
+	for: a run in its linger phase only ends early when a datagram arrives
 */
-static int	_poll_timeout( long long next_action_ms, long long deadline_ms )
-{
-	long long	wake_at;
-
-	wake_at = next_action_ms;
-	if (deadline_ms < wake_at)
-		wake_at = deadline_ms;
-	return (_ms_until(wake_at));
-}
-
 static t_step	_handle_next_event( t_ping *p, long long *next_action_ms,
 					long long deadline_ms )
 {
@@ -214,9 +215,7 @@ static t_step	_handle_next_event( t_ping *p, long long *next_action_ms,
 	t_step			step;
 
 	pfd = (struct pollfd){.fd = p->sockfd, .events = POLLIN};
-	ready = poll(&pfd, 1, _poll_timeout(*next_action_ms, deadline_ms));
-	if (ready > 0)
-		return (_handle_reply(p));
+	ready = poll(&pfd, 1, _ms_until(*next_action_ms));
 	if (ready < 0)
 	{
 		if (errno == EINTR)
@@ -224,7 +223,10 @@ static t_step	_handle_next_event( t_ping *p, long long *next_action_ms,
 		errno_msg("poll");
 		return (STEP_FAILED);
 	}
-	step = _do_next_action(p, next_action_ms);
+	if (ready > 0)
+		step = _handle_reply(p);
+	else
+		step = _do_next_action(p, next_action_ms);
 	if (step == STEP_CONTINUE && p->opts.timeout && _now_ms() >= deadline_ms)
 		return (STEP_DONE);
 	return (step);
@@ -237,10 +239,9 @@ static int	_ping_loop( t_ping *p )
 	t_step		step;
 
 	next_action_ms = _now_ms();
+	deadline_ms = 0;
 	if (p->opts.timeout)
 		deadline_ms = next_action_ms + p->opts.timeout * 1000;
-	else
-		deadline_ms = LLONG_MAX;
 	step = STEP_CONTINUE;
 	while (!g_stop && step == STEP_CONTINUE)
 		step = _handle_next_event(p, &next_action_ms, deadline_ms);

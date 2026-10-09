@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/15 19:00:43 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/27 23:09:16 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/10/09 20:29:46 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,8 +52,9 @@
 */
 typedef enum e_long_only
 {
-	OPT_TTL = CHAR_MAX + 1,
-	OPT_USAGE
+	OPT_HELP = CHAR_MAX + 1,
+	OPT_USAGE,
+	OPT_TTL
 }	t_long_only;
 
 //	What the loop does after handling a timer expiry or a datagram
@@ -82,11 +83,22 @@ typedef struct s_stats
 {
 	size_t	transmitted;	//	Echo Requests sent
 	size_t	received;		//	Echo Replies received
+	size_t	answered;		//	every answer, reply or error: ends a -c run
 	double	rtt_min;		//	minimum round-trip time
 	double	rtt_max;		//	maximum round-trip time
 	double	rtt_sum;		//	sum of all times, for doing average
 	double	rtt_sum_sq;		//	sum of all times squared, for stddev
 }	t_stats;
+
+//	A received datagram, validated and split into its headers
+//	The pointers point into the receive buffer and live as long as it does
+typedef struct s_packet
+{
+	const struct ip			*ip;
+	const struct icmphdr	*icmp;
+	size_t					icmp_size;
+	struct sockaddr_in		from;
+}	t_packet;
 
 typedef struct s_ping
 {
@@ -148,12 +160,11 @@ void		display_long_extra_argument( const char *name );
 void		display_invalid_value( const char *value, const char *near );
 void		display_value_too_small( const char *value );
 void		display_value_too_big( const char *value );
-void		display_icmp_error( const struct sockaddr_in *from, size_t icmp_size,
-				uint8_t type, uint8_t code );
+void		display_icmp_error( const t_packet *pkt, bool verbose );
 void		display_help( void );
+void		display_usage( void );
 void		display_target_info( t_ping *p );
-void		display_reply( const struct sockaddr_in *from, size_t icmp_size,
-				uint16_t seq, uint8_t ttl, const double *rtt );
+void		display_reply( const t_packet *pkt, const double *rtt );
 void		display_stats( const char *host, const t_stats *s, size_t payload_size );
 
 //	srcs/ping.c

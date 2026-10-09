@@ -118,14 +118,20 @@ capture verbose_unreach		-c1 -v 10.0.2.99
 #————————————————————————————————————————————————————————
 
 capture size			-c2 -s 100 127.0.0.1
-
 #	Below 16 bytes the payload cannot carry the timestamp: no RTT shown
+capture size_zero		-c1 -s 0 127.0.0.1
 capture size_small		-c2 -s 8 127.0.0.1
 capture size_max		-c1 -s 65399 127.0.0.1
 
 capture verbose_ttl		-c1 -v --ttl 1 8.8.8.8
-capture timeout			-w 1 192.0.2.1
-capture linger			-c1 -W 1 192.0.2.1
+
+capture timeout				-w 1 192.0.2.1
+capture timeout_max			-c1 -w 2147483647 127.0.0.1
+capture timeout_too_big		-w 2147483648 127.0.0.1
+
+capture linger				-c1 -W 1 192.0.2.1
+capture linger_max			-c1 -W 2147483647 127.0.0.1
+capture linger_too_big		-W 2147483648 127.0.0.1
 
 #————————————————————————————————————————————————————————
 #	NOMINAL
@@ -158,6 +164,16 @@ capture ttl_exceeded	-c2 --ttl 1 8.8.8.8
 #	so the VM's own kernel gives up and reports the error: it comes from
 #	10.0.2.15, the VM itself, not from a router
 capture host_unreach	-c2 10.0.2.99
+
+#	ICMP type 3, one code per address set up by setup.sh: 127.0.0.(10 + code)
+#	Codes 9 and 10 have no label of their own: they prove the Unknown Code fallback
+capture unreach_net			-c1 127.0.0.10
+capture unreach_host		-c1 127.0.0.11
+capture unreach_proto		-c1 127.0.0.12
+capture unreach_port		-c1 127.0.0.13
+capture unreach_net_prohib	-c1 127.0.0.19
+capture unreach_host_prohib	-c1 127.0.0.20
+capture unreach_admin		-c1 127.0.0.23
 
 #	198.51.100.0/24 is TEST-NET-2 (RFC 5737 paragraph 3). setup.sh adds an
 #	iptables OUTPUT REJECT rule for this address: since the rejection

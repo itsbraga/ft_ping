@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/22 02:39:08 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/27 23:21:17 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/10/09 17:00:15 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,14 +67,19 @@ static void	_reject_option( char **argv, int opt, const struct option *long_opts
 
 static void	_apply_option( t_options *o, int opt, const struct option *long_opts, char **argv )
 {
+	if (opt == '?' && optopt == '?')
+		opt = OPT_HELP;
 	switch (opt)
 	{
-		case '?':
+		case OPT_HELP:
 			display_help();
 			exit(EXIT_SUCCESS);
 		case 'v':
 			o->verbose = true;
 			break;
+		case OPT_USAGE:
+			display_usage();
+			exit(EXIT_SUCCESS);
 		case 'c':
 			o->count = _parse_number(optarg, 0, true);
 			break;
@@ -112,7 +117,7 @@ static char	*_host_operand( int argc, char **argv )
 char	*parse_options( t_options *o, int argc, char **argv )
 {
 	static const struct option	long_opts[] = {
-		{"help", no_argument, NULL, '?'},
+		{"help", no_argument, NULL, OPT_HELP},
 		{"usage", no_argument, NULL, OPT_USAGE},
 		{"verbose", no_argument, NULL, 'v'},
 		{"count", required_argument, NULL, 'c'},
@@ -125,7 +130,7 @@ char	*parse_options( t_options *o, int argc, char **argv )
 	int	opt;
 
 	opterr = 0;
-	while ((opt = getopt_long(argc, argv, ":?vc:s:w:W:", long_opts, NULL)) != -1)
+	while ((opt = getopt_long(argc, argv, ":vc:s:w:W:", long_opts, NULL)) != -1)
 		_apply_option(o, opt, long_opts, argv);
 	return (_host_operand(argc, argv));
 }

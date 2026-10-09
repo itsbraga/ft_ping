@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/31 15:49:58 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/27 22:57:52 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/10/12 00:21:02 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,26 +24,19 @@ void	err_msg( const char *detail )
 
 const char	*unreach_str( uint8_t code )
 {
-	static const char	*msg[] = {
-		"Destination Net Unreachable",
-		"Destination Host Unreachable",
-		"Destination Protocol Unreachable",
-		"Destination Port Unreachable",
-		"Frag needed and DF set",
-		"Source Route Failed",
-		"Destination Net Unknown",
-		"Destination Host Unknown",
-		"Source Host Isolated",
-		"Destination Net Prohibited",
-		"Destination Host Prohibited",
-		"Destination Net Unreachable for TOS",
-		"Destination Host Unreachable for TOS",
-		"Communication Administratively Prohibited",
-		"Host Precedence Violation",
-		"Precedence Cutoff in Effect",
-	};
-
-	if (code < sizeof(msg) / sizeof(msg[0]))
-		return (msg[code]);
-	return ("Dest Unreachable, Unknown Code");
+	switch (code)
+	{
+		case ICMP_NET_UNREACH:
+			return ("Destination Net Unreachable");
+		case ICMP_HOST_UNREACH:
+			return ("Destination Host Unreachable");
+		case ICMP_PROT_UNREACH:
+			return ("Destination Protocol Unreachable");
+		case ICMP_PORT_UNREACH:
+			return ("Destination Port Unreachable");
+		case ICMP_PKT_FILTERED:
+			return ("Packet Filtered");
+		default:
+			return (NULL);
+	}
 }

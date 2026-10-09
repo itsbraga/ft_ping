@@ -6,14 +6,14 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/26 19:01:23 by annabrag          #+#    #+#             */
-/*   Updated: 2026/09/22 17:56:57 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/10/09 19:41:19 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "ft_ping.h"
 
 /*
-	Internet checksum — RFC 1071.
+	RFC 1071
 
 	Sums the data as 16-bit words into a 32-bit accumulator, folds the
 	carries back into the low 16 bits, and returns the one's complement.
@@ -27,22 +27,24 @@
 */
 static uint16_t	_internet_checksum( const void *data, size_t size )
 {
-	const uint16_t	*words;
+	const uint8_t	*bytes;
 	uint32_t		sum;
-	uint16_t		last;
+	uint16_t		word;
 
-	words = (const uint16_t *)data;
+	bytes = (const uint8_t *)data;
 	sum = 0;
 	while (size > 1)
 	{
-		sum += *words++;
-		size -= 2;	// 2 bytes per round
+		memcpy(&word, bytes, sizeof(word));
+		sum += word;
+		bytes += 2;
+		size -= 2;
 	}
 	if (size == 1)
 	{
-		last = 0;
-		memcpy(&last, words, 1);
-		sum += last;
+		word = 0;
+		memcpy(&word, bytes, 1);
+		sum += word;
 	}
 	/*
 		sum >> 16		the accumulated carries (high 16 bits)
@@ -60,27 +62,21 @@ static uint16_t	_internet_checksum( const void *data, size_t size )
 static void	_fill_payload( uint8_t *payload, size_t size )
 {
 	struct timeval	now;
+	size_t			offset;
 	size_t			i;
 
+	offset = 0;
 	if (size >= sizeof(now))
 	{
 		gettimeofday(&now, NULL);
 		memcpy(payload, &now, sizeof(now));
-		i = sizeof(now);
-		while (i < size)
-		{
-			payload[i] = (i - sizeof(now)) & 0xFF;
-			i++;
-		}
+		offset = sizeof(now);
 	}
-	else
+	i = offset;
+	while (i < size)
 	{
-		i = 0;
-		while (i < size)
-		{
-			payload[i] = i & 0xFF;
-			i++;
-		}
+		payload[i] = (i - offset) & 0xFF;
+		i++;
 	}
 }
 

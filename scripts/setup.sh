@@ -25,7 +25,7 @@ TEST_DENIED_IP="198.51.100.7"
 
 BUILD_DIR="/tmp/inetutils_build"
 
-printf "${BOLD}${PP}=======  ft_ping VM PROVISIONNING  =======${NC}\n\n"
+printf "${BOLD}${PP}=======  ft_ping VM PROVISIONING  =======${NC}\n\n"
 
 if [ "$(id -u)" -ne 0 ]; then
 	printf "${BOLD}${RED}Error:${NC} this script must be run as root (sudo)\n"
@@ -80,6 +80,24 @@ if ! iptables -C OUTPUT -d "$TEST_DENIED_IP" -j REJECT \
 		--reject-with icmp-host-unreachable
 fi
 printf "${PG}✔ ${NC}%s denied at send time\n" "$TEST_DENIED_IP"
+
+#	One ICMP Destination Unreachable code per loopback address, 127.0.0.(10 + code):
+#	the request is rejected on its way back in, after it was sent, so the kernel
+#	answers with a genuine ICMP error instead of failing the send as OUTPUT does
+reject_with()
+{
+	if ! iptables -C INPUT -p icmp -d "$1" -j REJECT --reject-with "$2" 2>/dev/null; then
+		iptables -A INPUT -p icmp -d "$1" -j REJECT --reject-with "$2"
+	fi
+}
+reject_with 127.0.0.10 icmp-net-unreachable
+reject_with 127.0.0.11 icmp-host-unreachable
+reject_with 127.0.0.12 icmp-proto-unreachable
+reject_with 127.0.0.13 icmp-port-unreachable
+reject_with 127.0.0.19 icmp-net-prohibited
+reject_with 127.0.0.20 icmp-host-prohibited
+reject_with 127.0.0.23 icmp-admin-prohibited
+printf "${PG}✔ ${NC}127.0.0.(10 + N) answers with ICMP Destination Unreachable code N\n"
 
 #————————————————————————————————————————————————————————
 #	Step 4: DOWNLOAD AND VERIFY

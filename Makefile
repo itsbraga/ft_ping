@@ -96,7 +96,7 @@ $(NAME): $(OBJS)
 		@$(CC) $(CFLAGS) $(INC) $(OBJS) -o $(NAME) $(LDFLAGS)
 		@printf "$(BOLD)========================================\n"
 		$(call display_ascii_art,$(P_PURPLE))
-		@printf "$(BOLD)==============$(BLINK)$(PINK)   READY!   $(NC)$(BOLD)==============$(NC)\n\n"
+		@printf "$(NC)$(BOLD)==============$(BLINK)$(PINK)   READY!   $(NC)$(BOLD)==============$(NC)\n\n"
 
 clean:
 		rm -rf $(OBJS_DIR)
@@ -109,7 +109,7 @@ fclean:	clean
 
 re:	fclean
 		@$(MAKE) --no-print-directory all
-		@printf "$(BOLD)$(P_YELLOW)./ft_ping -$(NC) Project successfully rebuilt! ✨\n"
+		@printf "$(BOLD)$(P_YELLOW)./ft_ping ---$(NC) Project successfully rebuilt! ✨\n"
 
 setuid:	$(NAME)
 		sudo chown root:root $(NAME)
