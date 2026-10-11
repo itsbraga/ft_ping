@@ -1,0 +1,4 @@
+PING 127.0.0.13 (127.0.0.13): 56 data bytes$
+92 bytes from 127.0.0.13: Destination Port Unreachable$
+--- 127.0.0.13 ping statistics ---$
+1 packets transmitted, 0 packets received, 100% packet loss$
