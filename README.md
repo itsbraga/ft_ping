@@ -95,11 +95,11 @@ stdout and stderr keep the order in which they were written.
 
 Every behaviour is checked against the reference's actual output.
 
-`tools/setup.sh` provisions the Debian VM: packages, SSH, test targets, and
+`scripts/setup.sh` provisions the Debian VM: packages, SSH, test targets, and
 inetutils 2.0 built from the official GNU tarball once its GPG signature has
 been verified against the GNU keyring and its SHA-256 matches a pinned value.
 
-`tools/capture_refs.sh` records the reference's output for each test case in
+`scripts/capture_refs.sh` records the reference's output for each test case in
 `refs/`: a `.cat` file passed through `cat -A`, so trailing spaces and tabs
 show, and a `.code` file holding the exit status. It runs unprivileged, like
 the setuid reference it captures.
@@ -131,6 +131,6 @@ The test targets avoid depending on the outside world where possible:
 ```
 includes/   headers
 srcs/       sources
-tools/      setup.sh, capture_refs.sh
+scripts/    setup.sh, capture_refs.sh
 refs/       reference corpus
 ```
