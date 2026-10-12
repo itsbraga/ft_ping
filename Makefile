@@ -48,33 +48,34 @@ DEPS		:=	$(OBJS:.o=.d)
 #	COMPILATION PROGRESS
 #————————————————————————————————————————————————————————
 
-PROGRESS_FILE	:=	.progress_count
-TOTAL_FILES		:=	$(words $(SRCS))
+TOTAL_FILES	:=	$(words $(SRCS))
 
-BAR_WIDTH		:=	10
-BAR_FILL		:=	=
-BAR_EMPTY		:=	.
+BAR_WIDTH	:=	10
+BAR_FILL	:=	=
+BAR_EMPTY	:=	.
+
+ifndef TO_BUILD
+TO_BUILD	:=	$(shell $(MAKE) -n --no-print-directory TO_BUILD=0 $(NAME) 2>/dev/null \
+					| grep -c '^$(CC) .*-o $(OBJS_DIR)')
+endif
+
+COMPILED	:=
+
 
 define step
-	@printf "x\n" >> $(PROGRESS_FILE); \
-	C=`wc -l < $(PROGRESS_FILE)`; \
-	T=$(TOTAL_FILES); \
-	if [ $$T -lt $$C ]; then T=$$C; fi; \
+	@$(eval COMPILED += x)C=$(words $(COMPILED)); \
+	T=$(TO_BUILD); \
 	P=`expr $$C \* 100 / $$T`; \
 	F=`expr $$C \* $(BAR_WIDTH) / $$T`; \
 	B=""; V=""; I=0; \
 	while [ $$I -lt $$F ]; do B="$$B$(BAR_FILL)"; I=`expr $$I + 1`; done; \
 	while [ $$I -lt $(BAR_WIDTH) ]; do V="$$V$(BAR_EMPTY)"; I=`expr $$I + 1`; done; \
-	printf "$(WHITE)[$(P_GREEN)%s$(WHITE)%s]$(NC) $(P_GREEN)%3d%%$(NC) $(P_PURPLE)(%d/%d)$(NC) %s\n" \
-		"$$B" "$$V" "$$P" "$$C" "$$T" "$(1)"
+	printf "$(WHITE)[$(P_GREEN)%s$(WHITE)%s]$(NC) $(P_GREEN)%3d%%$(NC) %s\n" \
+		"$$B" "$$V" "$$P" "$(1)"
 endef
 
 define recap
-	@C=`cat $(PROGRESS_FILE) 2>/dev/null | wc -l`; \
-	if [ $$C -gt 0 ]; then \
-		printf "\n$(BOLD)$(P_PURPLE)Files compiled %d/%d$(NC)\n" "$$C" "$(TOTAL_FILES)"; \
-	fi
-	@rm -f $(PROGRESS_FILE)
+	$(if $(COMPILED),@printf "\n$(BOLD)$(P_PURPLE)Files compiled %d/%d$(NC)\n" $(words $(COMPILED)) $(TOTAL_FILES))
 	@printf "$(BOLD)$(PINK)Linking $(NAME)...$(NC)\n\n"
 endef
 
