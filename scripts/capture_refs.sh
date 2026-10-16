@@ -175,6 +175,10 @@ capture unreach_net_prohib	-c1 127.0.0.19
 capture unreach_host_prohib	-c1 127.0.0.20
 capture unreach_admin		-c1 127.0.0.23
 
+#	255.255.255.255 is the limited broadcast address (RFC 919). Linux refuses
+#	sendto() to it with EACCES unless SO_BROADCAST is set on the socket
+capture broadcast		-c1 255.255.255.255
+
 #	198.51.100.0/24 is TEST-NET-2 (RFC 5737 paragraph 3). setup.sh adds an
 #	iptables OUTPUT REJECT rule for this address: since the rejection
 #	happens locally (not at a remote router), it surfaces as EPERM from

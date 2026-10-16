@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/11 17:33:03 by annabrag          #+#    #+#             */
-/*   Updated: 2026/10/12 00:22:53 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/10/16 18:22:27 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -145,6 +145,11 @@ static t_step	_handle_reply( t_ping *p )
 	size = recv_packet(p, buf, sizeof(buf), &pkt.from);
 	if (!_parse_packet(buf, size, &pkt))
 		return (STEP_CONTINUE);
+	// printf("[debug] de %s type=%d id=%d seq=%d\n",
+	// 	inet_ntoa(pkt.ip->ip_src),
+	// 	pkt.icmp->type,
+	// 	ntohs(pkt.icmp->un.echo.id),
+	// 	ntohs(pkt.icmp->un.echo.sequence));
 	if (_is_our_reply(p, &pkt))
 	{
 		p->stats.received++;

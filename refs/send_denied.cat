@@ -1,2 +1,3 @@
 PING 198.51.100.7 (198.51.100.7): 56 data bytes$
-/opt/inetutils/bin/ping: sending packet: Operation not permitted$
+--- 198.51.100.7 ping statistics ---$
+2 packets transmitted, 0 packets received, 100% packet loss$

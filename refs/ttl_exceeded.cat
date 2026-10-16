@@ -1,5 +1,6 @@
 PING 8.8.8.8 (8.8.8.8): 56 data bytes$
-36 bytes from 10.0.2.2: Time to live exceeded$
-36 bytes from 10.0.2.2: Time to live exceeded$
+64 bytes from 8.8.8.8: icmp_seq=0 ttl=1 time=2.490 ms$
+64 bytes from 8.8.8.8: icmp_seq=1 ttl=1 time=1.669 ms$
 --- 8.8.8.8 ping statistics ---$
-2 packets transmitted, 0 packets received, 100% packet loss$
+2 packets transmitted, 2 packets received, 0% packet loss$
+round-trip min/avg/max/stddev = 1.669/2.080/2.490/0.411 ms$

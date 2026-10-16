@@ -1,0 +1,4 @@
+PING 255.255.255.255 (255.255.255.255): 56 data bytes$
+92 bytes from 10.0.2.2: Destination Net Unreachable$
+--- 255.255.255.255 ping statistics ---$
+1 packets transmitted, 0 packets received, 100% packet loss$

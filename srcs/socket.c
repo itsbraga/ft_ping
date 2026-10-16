@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/31 15:13:20 by annabrag          #+#    #+#             */
-/*   Updated: 2026/10/09 20:07:02 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/10/16 18:41:09 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,8 +31,12 @@ int	create_socket( t_ping *p )
 
 void	apply_socket_options( t_ping *p )
 {
+	int	one;
 	int	ttl;
 
+	//	Without it, sendto() to a broadcast address fails with EACCES
+	one = 1;
+	setsockopt(p->sockfd, SOL_SOCKET, SO_BROADCAST, &one, sizeof(one));
 	ttl = (int)p->opts.ttl;
 	if (ttl > 0 && setsockopt(p->sockfd, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) == -1)
 		errno_msg("setsockopt(IP_TTL)");

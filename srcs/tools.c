@@ -6,7 +6,7 @@
 /*   By: annabrag <annabrag@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/31 15:49:58 by annabrag          #+#    #+#             */
-/*   Updated: 2026/10/12 17:35:46 by annabrag         ###   ########.fr       */
+/*   Updated: 2026/10/16 18:32:08 by annabrag         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 void	errno_msg( const char *context )
 {
-	fprintf(stderr, "%s: %s: %s\n", PROG_NAME, context, strerror(errno));
+	fprintf(stderr, "%s: %s: %s\n", PROG_ARGV0, context, strerror(errno));
 }
 
 void	err_msg( const char *detail )

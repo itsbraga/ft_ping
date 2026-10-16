@@ -1,4 +1,5 @@
 PING 127.0.0.11 (127.0.0.11): 56 data bytes$
-92 bytes from 127.0.0.11: Destination Host Unreachable$
+64 bytes from 127.0.0.11: icmp_seq=0 ttl=64 time=0.013 ms$
 --- 127.0.0.11 ping statistics ---$
-1 packets transmitted, 0 packets received, 100% packet loss$
+1 packets transmitted, 1 packets received, 0% packet loss$
+round-trip min/avg/max/stddev = 0.013/0.013/0.013/0.000 ms$
